@@ -5,6 +5,11 @@ import SectionBorder from '@/Components/SectionBorder.vue';
 import TeamMemberManager from '@/Pages/Teams/Partials/TeamMemberManager.vue';
 import UpdateTeamNameForm from '@/Pages/Teams/Partials/UpdateTeamNameForm.vue';
 import type { JetstreamTeamPermissions, Role, Team, TeamInvitation, User, UserMembership } from '@/types';
+import PageContainer from '@/Pages/PageContainer.vue';
+
+defineOptions({
+    layout: AppLayout,
+});
 
 defineProps<{
     team: Team & {
@@ -18,7 +23,7 @@ defineProps<{
 </script>
 
 <template>
-    <AppLayout title="Team Settings">
+    <PageContainer title="Team Settings">
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                 Team Settings
@@ -43,5 +48,5 @@ defineProps<{
                 </template>
             </div>
         </div>
-    </AppLayout>
+    </PageContainer>
 </template>

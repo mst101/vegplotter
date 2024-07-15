@@ -7,6 +7,11 @@ import TwoFactorAuthenticationForm from '@/Pages/Profile/Partials/TwoFactorAuthe
 import UpdatePasswordForm from '@/Pages/Profile/Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from '@/Pages/Profile/Partials/UpdateProfileInformationForm.vue';
 import type { Session } from '@/types';
+import PageContainer from '@/Pages/PageContainer.vue';
+
+defineOptions({
+    layout: AppLayout,
+});
 
 defineProps<{
     confirmsTwoFactorAuthentication: boolean;
@@ -15,7 +20,7 @@ defineProps<{
 </script>
 
 <template>
-    <AppLayout title="Profile">
+    <PageContainer title="Profile">
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                 Profile
@@ -54,5 +59,5 @@ defineProps<{
                 </template>
             </div>
         </div>
-    </AppLayout>
+    </PageContainer>
 </template>
