@@ -269,7 +269,7 @@ function logout() {
             </nav>
 
             <!-- Page Content -->
-            <main>
+            <main class="text-gray-800">
                 <slot />
             </main>
         </div>
