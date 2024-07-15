@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
@@ -12,24 +12,24 @@ const props = defineProps({
     },
     contentClasses: {
         type: Array,
-        default: () => ['py-1', 'bg-white'],
+        default: () => ['py-1', 'bg-white dark:bg-gray-700'],
     },
 });
 
-let open = ref(false);
+const open = ref(false);
 
-const closeOnEscape = (e) => {
+function closeOnEscape(e: KeyboardEvent) {
     if (open.value && e.key === 'Escape') {
         open.value = false;
     }
-};
+}
 
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
 onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 
 const widthClass = computed(() => {
     return {
-        '48': 'w-48',
+        48: 'w-48',
     }[props.width.toString()];
 });
 
@@ -48,7 +48,7 @@ const alignmentClasses = computed(() => {
 
 <template>
     <div class="relative">
-        <div @click="open = ! open">
+        <div @click="open = !open">
             <slot name="trigger" />
         </div>
 
@@ -70,7 +70,7 @@ const alignmentClasses = computed(() => {
                 style="display: none;"
                 @click="open = false"
             >
-                <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
+                <div class="rounded-md ring-1 ring-black/5" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

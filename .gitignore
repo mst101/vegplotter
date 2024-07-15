@@ -21,3 +21,4 @@ yarn-error.log
 /.vscode
 up.sh
 tests/coverage
+vite.config.js

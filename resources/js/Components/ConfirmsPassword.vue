@@ -1,12 +1,12 @@
-<script setup>
-import { ref, reactive, nextTick } from 'vue';
+<script setup lang="ts">
+import { nextTick, reactive, ref } from 'vue';
+import axios from 'axios';
 import DialogModal from './DialogModal.vue';
 import InputError from './InputError.vue';
 import PrimaryButton from './PrimaryButton.vue';
 import SecondaryButton from './SecondaryButton.vue';
 import TextInput from './TextInput.vue';
-
-const emit = defineEmits(['confirmed']);
+import type { Nullable } from '@/types';
 
 defineProps({
     title: {
@@ -23,6 +23,8 @@ defineProps({
     },
 });
 
+const emit = defineEmits(['confirmed']);
+
 const confirmingPassword = ref(false);
 
 const form = reactive({
@@ -31,21 +33,22 @@ const form = reactive({
     processing: false,
 });
 
-const passwordInput = ref(null);
+const passwordInput = ref<Nullable<HTMLInputElement>>(null);
 
-const startConfirmingPassword = () => {
-    axios.get(route('password.confirmation')).then(response => {
+function startConfirmingPassword() {
+    axios.get(route('password.confirmation')).then((response) => {
         if (response.data.confirmed) {
             emit('confirmed');
-        } else {
+        }
+        else {
             confirmingPassword.value = true;
 
-            setTimeout(() => passwordInput.value.focus(), 250);
+            setTimeout(() => passwordInput.value?.focus(), 250);
         }
     });
-};
+}
 
-const confirmPassword = () => {
+function confirmPassword() {
     form.processing = true;
 
     axios.post(route('password.confirm'), {
@@ -55,19 +58,18 @@ const confirmPassword = () => {
 
         closeModal();
         nextTick().then(() => emit('confirmed'));
-
-    }).catch(error => {
+    }).catch((error) => {
         form.processing = false;
         form.error = error.response.data.errors.password[0];
-        passwordInput.value.focus();
+        passwordInput.value?.focus();
     });
-};
+}
 
-const closeModal = () => {
+function closeModal() {
     confirmingPassword.value = false;
     form.password = '';
     form.error = '';
-};
+}
 </script>
 
 <template>
@@ -100,11 +102,12 @@ const closeModal = () => {
             </template>
 
             <template #footer>
-                <SecondaryButton @click="closeModal">
+                <SecondaryButton type="button" @click="closeModal">
                     Cancel
                 </SecondaryButton>
 
                 <PrimaryButton
+                    type="button"
                     class="ms-3"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import ActionMessage from '@/Components/ActionMessage.vue';
@@ -7,9 +7,10 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import type { Nullable } from '@/types';
 
-const passwordInput = ref(null);
-const currentPasswordInput = ref(null);
+const passwordInput = ref<Nullable<HTMLInputElement>>(null);
+const currentPasswordInput = ref<Nullable<HTMLInputElement>>(null);
 
 const form = useForm({
     current_password: '',
@@ -17,7 +18,7 @@ const form = useForm({
     password_confirmation: '',
 });
 
-const updatePassword = () => {
+function updatePassword() {
     form.put(route('user-password.update'), {
         errorBag: 'updatePassword',
         preserveScroll: true,
@@ -25,16 +26,16 @@ const updatePassword = () => {
         onError: () => {
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');
-                passwordInput.value.focus();
+                passwordInput.value?.focus();
             }
 
             if (form.errors.current_password) {
                 form.reset('current_password');
-                currentPasswordInput.value.focus();
+                currentPasswordInput.value?.focus();
             }
         },
     });
-};
+}
 </script>
 
 <template>
@@ -58,7 +59,7 @@ const updatePassword = () => {
                     class="mt-1 block w-full"
                     autocomplete="current-password"
                 />
-                <InputError :message="form.errors.current_password" class="mt-2" />
+                <InputError v-if="form.errors?.current_password" :message="form.errors.current_password" class="mt-2" />
             </div>
 
             <div class="col-span-6 sm:col-span-4">
@@ -71,7 +72,7 @@ const updatePassword = () => {
                     class="mt-1 block w-full"
                     autocomplete="new-password"
                 />
-                <InputError :message="form.errors.password" class="mt-2" />
+                <InputError v-if="form.errors?.password" :message="form.errors.password" class="mt-2" />
             </div>
 
             <div class="col-span-6 sm:col-span-4">
@@ -83,7 +84,7 @@ const updatePassword = () => {
                     class="mt-1 block w-full"
                     autocomplete="new-password"
                 />
-                <InputError :message="form.errors.password_confirmation" class="mt-2" />
+                <InputError v-if="form.errors?.password_confirmation" :message="form.errors.password_confirmation" class="mt-2" />
             </div>
         </template>
 
@@ -92,7 +93,7 @@ const updatePassword = () => {
                 Saved.
             </ActionMessage>
 
-            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+            <PrimaryButton type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                 Save
             </PrimaryButton>
         </template>

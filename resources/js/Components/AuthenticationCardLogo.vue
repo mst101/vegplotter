@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Link :href="'/'">
+    <Link href="/">
         <svg
-            class="w-16 h-16"
+            class="size-16"
             viewBox="0 0 48 48"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import ActionSection from '@/Components/ActionSection.vue';
@@ -7,34 +7,35 @@ import DialogModal from '@/Components/DialogModal.vue';
 import InputError from '@/Components/InputError.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import type { Nullable } from '@/types';
 
 const confirmingUserDeletion = ref(false);
-const passwordInput = ref(null);
+const passwordInput = ref<Nullable<HTMLInputElement>>(null);
 
 const form = useForm({
     password: '',
 });
 
-const confirmUserDeletion = () => {
+function confirmUserDeletion() {
     confirmingUserDeletion.value = true;
 
-    setTimeout(() => passwordInput.value.focus(), 250);
-};
+    setTimeout(() => passwordInput.value?.focus(), 250);
+}
 
-const deleteUser = () => {
+function deleteUser() {
     form.delete(route('current-user.destroy'), {
         preserveScroll: true,
         onSuccess: () => closeModal(),
-        onError: () => passwordInput.value.focus(),
+        onError: () => passwordInput.value?.focus(),
         onFinish: () => form.reset(),
     });
-};
+}
 
-const closeModal = () => {
+function closeModal() {
     confirmingUserDeletion.value = false;
 
     form.reset();
-};
+}
 </script>
 
 <template>
@@ -48,12 +49,12 @@ const closeModal = () => {
         </template>
 
         <template #content>
-            <div class="max-w-xl text-sm text-gray-600">
+            <div class="max-w-xl text-sm text-gray-600 dark:text-gray-400">
                 Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.
             </div>
 
             <div class="mt-5">
-                <DangerButton @click="confirmUserDeletion">
+                <DangerButton type="button" @click="confirmUserDeletion">
                     Delete Account
                 </DangerButton>
             </div>
@@ -78,16 +79,17 @@ const closeModal = () => {
                             @keyup.enter="deleteUser"
                         />
 
-                        <InputError :message="form.errors.password" class="mt-2" />
+                        <InputError v-if="form.errors?.password" :message="form.errors.password" class="mt-2" />
                     </div>
                 </template>
 
                 <template #footer>
-                    <SecondaryButton @click="closeModal">
+                    <SecondaryButton type="button" @click="closeModal">
                         Cancel
                     </SecondaryButton>
 
                     <DangerButton
+                        type="submit"
                         class="ms-3"
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
