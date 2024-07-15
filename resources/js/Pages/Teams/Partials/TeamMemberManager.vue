@@ -113,7 +113,7 @@ function displayableRole(role: string) {
 
                 <template #form>
                     <div class="col-span-6">
-                        <div class="max-w-xl text-sm text-gray-600 dark:text-gray-400">
+                        <div class="max-w-xl text-sm text-gray-600">
                             Please provide the email address of the person you would like to add to this team.
                         </div>
                     </div>
@@ -135,19 +135,19 @@ function displayableRole(role: string) {
                         <InputLabel for="roles" value="Role" />
                         <InputError v-if="addTeamMemberForm.errors?.role" :message="addTeamMemberForm.errors.role" class="mt-2" />
 
-                        <div class="relative z-0 mt-1 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="relative z-0 mt-1 cursor-pointer rounded-lg border border-gray-200">
                             <button
                                 v-for="(role, i) in availableRoles"
                                 :key="role.key"
                                 type="button"
-                                class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
-                                :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none dark:border-gray-700': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
+                                class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
                                 @click="addTeamMemberForm.role = role.key"
                             >
                                 <div :class="{ 'opacity-50': addTeamMemberForm.role && addTeamMemberForm.role !== role.key }">
                                     <!-- Role Name -->
                                     <div class="flex items-center">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400" :class="{ 'font-semibold': addTeamMemberForm.role === role.key }">
+                                        <div class="text-sm text-gray-600" :class="{ 'font-semibold': addTeamMemberForm.role === role.key }">
                                             {{ role.name }}
                                         </div>
 
@@ -157,7 +157,7 @@ function displayableRole(role: string) {
                                     </div>
 
                                     <!-- Role Description -->
-                                    <div class="mt-2 text-start text-xs text-gray-600 dark:text-gray-400">
+                                    <div class="mt-2 text-start text-xs text-gray-600">
                                         {{ role.description }}
                                     </div>
                                 </div>
@@ -195,7 +195,7 @@ function displayableRole(role: string) {
                 <template #content>
                     <div class="space-y-6">
                         <div v-for="invitation in team.team_invitations" :key="invitation.id" class="flex items-center justify-between">
-                            <div class="text-gray-600 dark:text-gray-400">
+                            <div class="text-gray-600">
                                 {{ invitation.email }}
                             </div>
 
@@ -234,7 +234,7 @@ function displayableRole(role: string) {
                         <div v-for="user in team.users" :key="user.id" class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <img class="size-8 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">
-                                <div class="ms-4 dark:text-white">
+                                <div class="ms-4">
                                     {{ user.name }}
                                 </div>
                             </div>
@@ -285,19 +285,19 @@ function displayableRole(role: string) {
 
             <template #content>
                 <div v-if="managingRoleFor">
-                    <div class="relative z-0 mt-1 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="relative z-0 mt-1 cursor-pointer rounded-lg border border-gray-200">
                         <button
                             v-for="(role, i) in availableRoles"
                             :key="role.key"
                             type="button"
-                            class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
-                            :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none dark:border-gray-700': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
+                            class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
                             @click="updateRoleForm.role = role.key"
                         >
                             <div :class="{ 'opacity-50': updateRoleForm.role && updateRoleForm.role !== role.key }">
                                 <!-- Role Name -->
                                 <div class="flex items-center">
-                                    <div class="text-sm text-gray-600 dark:text-gray-400" :class="{ 'font-semibold': updateRoleForm.role === role.key }">
+                                    <div class="text-sm text-gray-600" :class="{ 'font-semibold': updateRoleForm.role === role.key }">
                                         {{ role.name }}
                                     </div>
 
@@ -307,7 +307,7 @@ function displayableRole(role: string) {
                                 </div>
 
                                 <!-- Role Description -->
-                                <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                <div class="mt-2 text-xs text-gray-600">
                                     {{ role.description }}
                                 </div>
                             </div>

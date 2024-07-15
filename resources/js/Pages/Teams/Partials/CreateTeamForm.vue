@@ -36,10 +36,10 @@ function createTeam() {
                     <img class="size-12 rounded-full object-cover" :src="$page.props.auth.user?.profile_photo_url" :alt="$page.props.auth.user?.name">
 
                     <div class="ms-4 leading-tight">
-                        <div class="text-gray-900 dark:text-white">
+                        <div class="text-gray-900">
                             {{ $page.props.auth.user?.name }}
                         </div>
-                        <div class="text-sm text-gray-700 dark:text-gray-300">
+                        <div class="text-sm text-gray-700">
                             {{ $page.props.auth.user?.email }}
                         </div>
                     </div>
