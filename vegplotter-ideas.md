@@ -9,6 +9,7 @@
 
 ## Bug fixes
 - When changing the planting time, the harvest time should also update
+- inituitive
 - deseases
 - Take a picture of your the seed packets 
 - upload the the planting row

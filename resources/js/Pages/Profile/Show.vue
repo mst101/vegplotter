@@ -23,7 +23,7 @@ defineProps<{
     <PageContainer title="Profile">
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Profile
+                Your Account
             </h2>
         </template>
 

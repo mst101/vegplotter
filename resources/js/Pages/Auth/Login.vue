@@ -1,13 +1,18 @@
 <script lang="ts" setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
-import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import type { Nullable } from '@/types';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import TextLink from '@/Components/TextLink.vue';
+
+defineOptions({
+    layout: AppLayout,
+});
 
 defineProps<{
     canResetPassword: boolean;
@@ -33,11 +38,15 @@ function submit() {
 <template>
     <Head title="Log in" />
 
-    <AuthenticationCard>
-        <template #logo>
-            <AuthenticationCardLogo />
-        </template>
+    <div class="flex justify-center p-6">
+        <div class="w-full text-3xl text-green-600 sm:max-w-md">
+            <h1>
+                Log in
+            </h1>
+        </div>
+    </div>
 
+    <AuthenticationCard>
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
         </div>
@@ -71,19 +80,26 @@ function submit() {
             </div>
 
             <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox v-model:checked="form.remember" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                <label class="flex items-start">
+                    <Checkbox v-model:checked="form.remember" class="mt-1" name="remember" />
+                    <span class="ms-4 text-sm text-gray-600"><span class="font-semibold">Remember me</span> - saves a cookie on your machine so that you don't have to log in each time you access VegPlotter.</span>
                 </label>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword" :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
-                </Link>
+            <div class="mt-4 flex items-center justify-between">
+                <div class="flex flex-col">
+                    <TextLink
+                        v-if="canResetPassword" :href="route('register')"
+                    >
+                        Create an account
+                    </TextLink>
+
+                    <TextLink
+                        v-if="canResetPassword" :href="route('password.request')"
+                    >
+                        Forgot your password?
+                    </TextLink>
+                </div>
 
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }" :disabled="form.processing" class="ms-4"

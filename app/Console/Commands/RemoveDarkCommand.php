@@ -29,7 +29,7 @@ class RemoveDarkCommand extends Command
         $this->removeDarkClasses((new Finder)
             ->in(resource_path('js'))
             ->name('*.vue')
-            ->notPath('Pages/Welcome.vue')
+            ->notPath('Pages/Home.vue')
         );
 
         return Command::SUCCESS;

@@ -140,7 +140,7 @@ function displayableRole(role: string) {
                                 v-for="(role, i) in availableRoles"
                                 :key="role.key"
                                 type="button"
-                                class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                                 :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
                                 @click="addTeamMemberForm.role = role.key"
                             >
@@ -290,7 +290,7 @@ function displayableRole(role: string) {
                             v-for="(role, i) in availableRoles"
                             :key="role.key"
                             type="button"
-                            class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="relative inline-flex w-full rounded-lg px-4 py-3 focus:z-10 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                             :class="{ 'rounded-t-none border-t border-gray-200 focus:border-none': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1 }"
                             @click="updateRoleForm.role = role.key"
                         >
