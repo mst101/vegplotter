@@ -37,5 +37,9 @@
             "composer run fmt",
             "composer run rector"
         ]
+    },
+    "dependencies": {
+        "konva": "^9.3.14",
+        "vue-konva": "^3.0.2"
     }
 }

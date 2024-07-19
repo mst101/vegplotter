@@ -15,6 +15,10 @@
         "types": [
             "@types/node"
         ],
+        "lib": [
+            "es6",
+            "dom"
+        ],
         "allowJs": true,
         "strict": true,
         "strictNullChecks": true,

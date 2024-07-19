@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      konva:
+        specifier: ^9.3.14
+        version: 9.3.14
+      vue-konva:
+        specifier: ^3.0.2
+        version: 3.0.2(konva@9.3.14)
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^2.22.2
@@ -1523,6 +1530,9 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
+  konva@9.3.14:
+    resolution: {integrity: sha512-Gmm5lyikGYJyogKQA7Fy6dKkfNh350V6DwfZkid0RVrGYP2cfCsxuMxgF5etKeCv7NjXYpJxKqi1dYkIkX/dcA==}
+
   laravel-vite-plugin@1.0.5:
     resolution: {integrity: sha512-Zv+to82YLBknDCZ6g3iwOv9wZ7f6EWStb9pjSm7MGe9Mfoy5ynT2ssZbGsMr1udU6rDg9HOoYEVGw5Qf+p9zbw==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -2238,6 +2248,12 @@ packages:
     engines: {node: ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: '>=6.0.0'
+
+  vue-konva@3.0.2:
+    resolution: {integrity: sha512-FNWKtPPVDihNuQcq7F4GzuVPkPaEfg8lnWezpRqgiC2VetdvONOiYOFD800jNL5kt/lEYnSOYvhqqdTPbv2c8w==}
+    engines: {node: '>= 4.0.0', npm: '>= 3.0.0'}
+    peerDependencies:
+      konva: '>7'
 
   vue-template-compiler@2.7.16:
     resolution: {integrity: sha512-AYbUWAJHLGGQM7+cNTELw+KsOG9nl2CnSv467WobS5Cv9uk3wFcnr1Etsz2sEIHEZvw1U+o9mRlEO6QbZvUPGQ==}
@@ -3829,6 +3845,8 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
+  konva@9.3.14: {}
+
   laravel-vite-plugin@1.0.5(vite@5.3.3(@types/node@20.14.10)):
     dependencies:
       picocolors: 1.0.1
@@ -4533,6 +4551,10 @@ snapshots:
       semver: 7.6.2
     transitivePeerDependencies:
       - supports-color
+
+  vue-konva@3.0.2(konva@9.3.14):
+    dependencies:
+      konva: 9.3.14
 
   vue-template-compiler@2.7.16:
     dependencies:
