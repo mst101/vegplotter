@@ -71,7 +71,7 @@ function logout() {
                                     My Jobs
                                 </NavLink>
 
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                                <NavLink :href="route('restaurant')" :active="route().current('restaurant')">
                                     Plants
                                 </NavLink>
 
@@ -210,6 +210,7 @@ function logout() {
                 <div
                     :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }"
                     class="sm:hidden"
+                    @click="showingNavigationDropdown = !showingNavigationDropdown"
                 >
                     <div class="block px-4 py-2 text-xs text-gray-400">
                         My Plots
@@ -217,7 +218,7 @@ function logout() {
 
                     <ResponsiveNavLink
                         v-if="$page.props.auth.user"
-                        as="button" :href="route('dashboard')"
+                        as="link" :href="route('dashboard')"
                         :active="route().current('dashboard')"
                     >
                         My first plot
@@ -225,7 +226,7 @@ function logout() {
 
                     <ResponsiveNavLink
                         v-else
-                        as="button" :href="route('login')"
+                        as="link" :href="route('login')"
                         :active="route().current('login')"
                     >
                         Log in to view my plots
@@ -235,7 +236,7 @@ function logout() {
                         My Jobs
                     </ResponsiveNavLink>
 
-                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                    <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
                         Plants
                     </ResponsiveNavLink>
 
@@ -244,9 +245,9 @@ function logout() {
                         More
                     </div>
 
-                    <DropdownLink :href="route('dashboard')">
+                    <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
                         About
-                    </DropdownLink>
+                    </ResponsiveNavLink>
 
                     <DropdownLink :href="route('dashboard')">
                         Pricing
@@ -273,12 +274,12 @@ function logout() {
                     <!-- Responsive Settings Options -->
                     <div class="border-t border-gray-200 py-4">
                         <div class="ml-4 flex">
-                            <!--                            <ResponsiveNavLink -->
-                            <!--                                :href="route('profile.show')" -->
-                            <!--                                :active="route().current('profile.show')" -->
-                            <!--                            > -->
-                            <!--                                Account -->
-                            <!--                            </ResponsiveNavLink> -->
+                            <ResponsiveNavLink
+                                :href="route('profile.show')"
+                                :active="route().current('profile.show')"
+                            >
+                                Account
+                            </ResponsiveNavLink>
 
                             <!--                            &lt;!&ndash; Authentication &ndash;&gt; -->
                             <!--                            <form v-if="$page.props.auth.user" method="POST" @submit.prevent="logout"> -->
@@ -312,6 +313,7 @@ function logout() {
             <!-- Page Content -->
             <main class="bg-gray-50 text-gray-800">
                 <slot />
+                <div id="container" class="mt-4" />
             </main>
         </div>
     </div>

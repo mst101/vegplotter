@@ -1,4 +1,6 @@
 import type { Config } from 'ziggy-js';
+import type Table from '@/Models/Table';
+import type Chair from '@/Models/Chair';
 
 export interface User {
     id: number;
@@ -125,4 +127,34 @@ export interface TeamInvitation {
     role: Nullable<string>;
     created_at: DateTime;
     updated_at: DateTime;
+}
+
+// Custom types
+export interface Model {
+    tables: Map<string, Table>;
+    chairs: Map<string, Chair>;
+}
+
+export interface TableConfig {
+    shape: string;
+    x: number;
+    y: number;
+}
+
+export interface PlanData {
+    tables: TableConfig[];
+}
+
+export interface Position {
+    x: number;
+    y: number;
+}
+
+interface Change {
+    obj: {
+        type: 'table' | 'chair'; // Add other types as needed
+        id: string;
+    };
+    before: Record<string, any>;
+    after: Record<string, any>;
 }

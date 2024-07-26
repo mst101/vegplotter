@@ -21,4 +21,10 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+    Route::get('/restaurant', function () {
+        return Inertia::render('RestaurantPage');
+    })->name('restaurant');
+    Route::get('/restaurant-old', function () {
+        return Inertia::render('RestaurantPageOld');
+    })->name('restaurant-old');
 });
