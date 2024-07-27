@@ -13,13 +13,15 @@ const showingNavigationDropdown = ref(false);
 function logout() {
     router.post(route('logout'));
 }
+
+const isRestaurant = location.pathname.includes('restaurant');
 </script>
 
 <template>
     <div>
         <Banner />
 
-        <div class="min-h-screen bg-gray-200">
+        <div class="bg-gray-200" :class="{ 'min-h-screen': !isRestaurant }">
             <nav class="border-b border-gray-100 bg-gray-100">
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -71,9 +73,9 @@ function logout() {
                                     My Jobs
                                 </NavLink>
 
-                                <NavLink :href="route('restaurant')" :active="route().current('restaurant')">
-                                    Plants
-                                </NavLink>
+                                <a :class="route().current('restaurant') ? 'inline-flex items-center px-4 border-green-400 font-medium leading-5 text-gray-900 focus:outline-none focus:border-green-700 transition duration-150 ease-in-out' : 'ease-in-out inline-flex items-center px-4 font-medium leading-5 text-gray-500 transition duration-150 hover:bg-gray-200 focus:rounded focus:border-gray-300 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500'" :href="route('restaurant')">
+                                    Restaurant
+                                </a>
 
                                 <Dropdown class="flex" align="left" width="72">
                                     <template #trigger>
@@ -99,7 +101,7 @@ function logout() {
                                     <template #content>
                                         <div>
                                             <!-- More -->
-                                            <DropdownLink :href="route('login')">
+                                            <DropdownLink :href="route('dashboard')">
                                                 About
                                             </DropdownLink>
 
@@ -237,7 +239,7 @@ function logout() {
                     </ResponsiveNavLink>
 
                     <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
-                        Plants
+                        Restaurant
                     </ResponsiveNavLink>
 
                     <!-- More -->
@@ -245,7 +247,7 @@ function logout() {
                         More
                     </div>
 
-                    <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
+                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         About
                     </ResponsiveNavLink>
 
@@ -313,7 +315,7 @@ function logout() {
             <!-- Page Content -->
             <main class="bg-gray-50 text-gray-800">
                 <slot />
-                <div id="container" class="mt-4" />
+                <!--                <div id="container" class="mt-4" /> -->
             </main>
         </div>
     </div>

@@ -61,9 +61,10 @@ function handleImageError() {
                                 <span class="font-medium text-green-600">Get organised!</span> The easiest way to plan
                                 your garden
                             </p>
-                            <p class="mt-4">
-                                We want you to triumph and deliver your most organised and productive vegetable
-                                garden!
+                            <p class="mt-4 font-semibold">
+                                N.B. You can log in to a <Link class="rounded-md py-1 text-purple-800 outline-none hover:text-purple-900 hover:underline focus:ring-2 focus:ring-green-500" :href="route('login')">
+                                    test account
+                                </Link> with "test@example.com" and "password".
                             </p>
 
                             <p class="mt-4">

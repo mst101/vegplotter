@@ -2,28 +2,10 @@ import Konva from 'konva';
 import type { IRect } from 'konva/lib/types';
 import Utils from '@/Utils/Konva';
 import Chair, { chairSize } from '@/Models/Chair.js';
-import type { Change, Position } from '@/types';
+import UndoStack from '@/Utils/UndoStack';
+import type { Change, OuterRect, Position, TableData } from '@/types';
 
-interface ChairPosition {
-    x: number;
-    y: number;
-    angle: number;
-}
-
-interface TableData {
-    shape: 'rect' | 'circle';
-    width?: number;
-    height?: number;
-    radius?: number;
-    chairPositions: ChairPosition[];
-}
-
-interface OuterRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+const undoStack = new UndoStack();
 
 // Config data for tables
 const tableData: Record<string, TableData> = {
@@ -231,7 +213,7 @@ export default class Table {
                 },
             };
 
-            globalThis.undoStack.apply(changeData);
+            undoStack.apply(changeData);
 
             table.draw();
         });
@@ -254,7 +236,7 @@ export default class Table {
                 },
             };
 
-            globalThis.undoStack.apply(changeData);
+            undoStack.apply(changeData);
 
             table.draw();
         });

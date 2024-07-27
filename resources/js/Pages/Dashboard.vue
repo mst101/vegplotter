@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
-import VegPlot from '@/Components/VegPlot.vue';
+import MyRestaurant from '@/Components/MyRestaurant.vue';
 
 defineOptions({
     layout: AppLayout,
@@ -10,6 +10,7 @@ defineOptions({
 
 <template>
     <PageContainer title="Dashboard" :show-footer="false">
-        <VegPlot />
+        <!--        <VegPlot /> -->
+        <MyRestaurant />
     </PageContainer>
 </template>

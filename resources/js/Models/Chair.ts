@@ -11,12 +11,12 @@ export const chairSize = {
 };
 
 export default class Chair {
-    id = Utils.getUUID(); // unique id of the chair
+    id: string = Utils.getUUID(); // unique id of the chair
     parentId: string | null = null;
-    angle = 0;
+    angle: number = 0;
     konvaShape: Konva.Group | null = null;
     position: Position | null = null;
-    visible = true;
+    visible: boolean = true;
 
     constructor(x: number, y: number, angle: number, tableGroup: Konva.Group, tableId: string) {
         this.position = {
@@ -51,7 +51,7 @@ export default class Chair {
             draggable: false,
         });
 
-        const rect1 = new Konva.Rect({
+        const rect1: Konva.Rect = new Konva.Rect({
             width: chairSize.width,
             height: chairSize.height,
             stroke: 'silver',

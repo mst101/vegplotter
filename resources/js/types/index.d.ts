@@ -1,6 +1,5 @@
 import type { Config } from 'ziggy-js';
-import type Table from '@/Models/Table';
-import type Chair from '@/Models/Chair';
+import type Konva from 'konva';
 
 export interface User {
     id: number;
@@ -130,24 +129,68 @@ export interface TeamInvitation {
 }
 
 // Custom types
+export interface ModelOrig {
+    tables: Map<string, TableConfig>;
+    chairs: Map<string, ChairConfig>;
+}
+
 export interface Model {
-    tables: Map<string, Table>;
-    chairs: Map<string, Chair>;
+    tables: Map<string, ModelTable>;
+    chairs: Map<string, ChairConfig>;
+}
+
+export interface Position {
+    x: number;
+    y: number;
 }
 
 export interface TableConfig {
-    shape: string;
+    id?: string;
+    shape: 'square-4' | 'square-6' | 'circle-4';
+    position: Position;
+}
+
+export interface ModelTable extends Konva.ShapeConfig {
+    id?: string;
+    shape?: 'square-4' | 'square-6' | 'circle-4';
+    position?: Position;
+}
+
+export interface TableConfigOrig {
+    id?: string;
+    shape: 'square-4' | 'square-6' | 'circle-4';
     x: number;
     y: number;
+}
+
+export interface PlanDataOrig {
+    tables: TableConfigOrig[];
 }
 
 export interface PlanData {
     tables: TableConfig[];
 }
 
-export interface Position {
+export interface ChairPosition {
+    id?: string;
     x: number;
     y: number;
+    angle: number;
+}
+
+export interface TableData {
+    shape: 'rect' | 'circle';
+    width?: number;
+    height?: number;
+    radius?: number;
+    chairPositions: ChairPosition[];
+}
+
+export interface OuterRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 interface Change {

@@ -10,10 +10,10 @@ import {
 import Konva from 'konva';
 import Table from '@/Models/Table';
 import UndoStack from '@/Utils/UndoStack';
-import type { Change, Model, PlanData } from '@/types';
+import type { Change, Model, PlanDataOrig } from '@/types';
 
 // Reactive data
-const planData: Ref<PlanData> = ref({
+const planData: Ref<PlanDataOrig> = ref({
     tables: [
         { shape: 'circle-4', x: 800, y: 800 },
         { shape: 'square-4', x: 800, y: 300 },
@@ -89,7 +89,7 @@ watchEffect(() => {
 });
 
 // Methods
-function loadPlan(planData: PlanData) {
+function loadPlan(planData: PlanDataOrig) {
     for (const tableConfig of planData.tables) {
         const table = new Table(layer.value!, tableConfig.shape, tableConfig.x, tableConfig.y);
         model.tables.set(table.id, table);
@@ -157,7 +157,7 @@ function setDiet(diet: string) {
         };
 
         // apply the change object
-        undoStack.apply(changeData);
+        globalThis.undoStack.apply(changeData);
     }
 }
 </script>

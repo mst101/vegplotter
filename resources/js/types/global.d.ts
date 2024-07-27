@@ -4,7 +4,7 @@ import type { route as ziggyRoute } from 'ziggy-js';
 import type Konva from 'konva';
 import type { PageProps as AppPageProps } from './';
 import type Model from '@/types';
-import type UndoStack from '@/Utils/UndoStack';
+// import type UndoStack from '@/Utils/UndoStack';
 
 declare global {
     var model: Model;

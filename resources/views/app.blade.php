@@ -18,5 +18,6 @@
     </head>
     <body style="font-family: 'Raleway', sans-serif;" class="font-sans antialiased">
         @inertia
+        <div id="container"/>
     </body>
 </html>
