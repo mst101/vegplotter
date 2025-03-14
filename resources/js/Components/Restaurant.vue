@@ -1,19 +1,105 @@
 <script setup lang="ts">
-import type { Ref } from 'vue';
-import {
-    onMounted,
-    onUnmounted,
-    reactive,
-    ref,
-    watchEffect,
-} from 'vue';
-import Konva from 'konva';
-import Table from '@/Models/Table';
-import UndoStack from '@/Utils/UndoStack';
-import type { Change, Model, PlanData } from '@/types';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
+import RestaurantTable from './RestaurantTable.vue';
 
-// Reactive data
-const planData: Ref<PlanData> = ref({
+// Types
+interface Position {
+    x: number;
+    y: number;
+}
+
+interface Chair {
+    id: string;
+    position: Position;
+    angle: number;
+    visible: boolean;
+    parentId: string;
+}
+
+interface Table {
+    id: string;
+    position: Position;
+    rotation: number;
+    diet: string;
+    tableType: string;
+    focus: boolean;
+    chairs: Chair[];
+}
+
+interface Change {
+    obj: {
+        type: string;
+        id: string;
+    };
+    before: Record<string, any>;
+    after: Record<string, any>;
+}
+
+// Table configuration data
+const tableData = {
+    'square-4': {
+        shape: 'rect',
+        width: 200,
+        height: 200,
+        chairPositions: [
+            { x: 0, y: 0.5, angle: 0 },
+            { x: 0.5, y: 0, angle: 90 },
+            { x: 1, y: 0.5, angle: 180 },
+            { x: 0.5, y: 1, angle: 270 },
+        ],
+    },
+    'square-6': {
+        shape: 'rect',
+        width: 200,
+        height: 100,
+        chairPositions: [
+            { x: 0, y: 0.5, angle: 0 },
+            { x: 0.33, y: 0, angle: 90 },
+            { x: 0.66, y: 0, angle: 90 },
+            { x: 1, y: 0.5, angle: 180 },
+            { x: 0.33, y: 1, angle: 270 },
+            { x: 0.66, y: 1, angle: 270 },
+        ],
+    },
+    'circle-4': {
+        shape: 'circle',
+        radius: 120,
+        chairPositions: [
+            { x: 0, y: 0.5, angle: 0 },
+            { x: 0.5, y: 0, angle: 90 },
+            { x: 1, y: 0.5, angle: 180 },
+            { x: 0.5, y: 1, angle: 270 },
+        ],
+    },
+};
+
+// Reactive state
+const tables = ref<Table[]>([]);
+const undoStack = reactive<{
+    changes: Change[];
+    redoStack: Change[];
+}>({
+    changes: [],
+    redoStack: [],
+});
+
+const focusedTableId = ref<string | null>(null);
+const stageConfig = reactive({
+    width: 500,
+    height: 500,
+    scaleX: 0.3,
+    scaleY: 0.3,
+    draggable: true,
+});
+
+// Computed properties
+const focusedTable = computed(() =>
+    tables.value.find(table => table.id === focusedTableId.value),
+);
+
+// Initial data
+const initialPlanData = {
     tables: [
         { shape: 'circle-4', x: 800, y: 800 },
         { shape: 'square-4', x: 800, y: 300 },
@@ -21,109 +107,194 @@ const planData: Ref<PlanData> = ref({
         { shape: 'square-6', x: 1300, y: 800 },
         { shape: 'square-4', x: 800, y: 1300 },
     ],
-});
+};
 
-globalThis.model = reactive<Model>({
-    tables: new Map(),
-    chairs: new Map(),
-});
+// Methods
+function createTable(tableType: string, x: number, y: number): Table {
+    const id = uuidv4();
+    const config = tableData[tableType];
 
-// create the undo handler instance
-globalThis.undoStack = new UndoStack();
+    // Create chairs based on table type
+    const chairs: Chair[] = config.chairPositions.map((pos, index) => {
+        // Calculate chair position based on table dimensions
+        let chairX, chairY;
+        const outerWidth = config.shape === 'rect'
+            ? config.width + 60
+            : config.radius * 2 + 60;
+        const outerHeight = config.shape === 'rect'
+            ? config.height + 60
+            : config.radius * 2 + 60;
 
-// Vue lifecycle hooks
-const stage = ref<Konva.Stage>();
-const layer = ref<Konva.Layer>();
+        const outerRect = {
+            x: -outerWidth / 2,
+            y: -outerHeight / 2,
+            width: outerWidth,
+            height: outerHeight,
+        };
 
-// the app does not allow the resizing of tables
-globalThis.transformer = new Konva.Transformer({
-    padding: 5, // put the transformer border outside the selection by 5 px
-    enabledAnchors: [], // switch off sizing anchors
-    rotateAnchorOffset: 20, // set offset of rotation anchor
-});
+        chairX = outerRect.x + (outerRect.width * pos.x);
+        chairY = outerRect.y + (outerRect.height * pos.y);
 
-// Set a click-event listener on the stage so that when the stage is
-// clicked any table that has focus loses it.
-function handleStageClick(evt: Konva.KonvaEventObject<unknown>) {
-    // if user clicks the stage de-select the currently selected table, if any.
-    if (evt.target.getClassName() === 'Stage') {
-        if (globalThis.transformer.nodes().length > 0) {
-            const id = globalThis.transformer.nodes()[0].getAttr('tableId');
-            const table = model.tables.get(id);
-            table.setFocus(false);
+        return {
+            id: uuidv4(),
+            position: { x: chairX, y: chairY },
+            angle: pos.angle,
+            visible: true,
+            parentId: id,
+        };
+    });
 
-            // clear the transformer nodes - hides transformer.
-            globalThis.transformer.nodes([]);
+    return {
+        id,
+        position: { x, y },
+        rotation: 0,
+        diet: 'Omnivore',
+        tableType,
+        focus: false,
+        chairs,
+    };
+}
+
+function loadPlan() {
+    tables.value = initialPlanData.tables.map(table =>
+        createTable(table.shape, table.x, table.y),
+    );
+}
+
+function applyChange(change: Change) {
+    undoStack.changes.push(change);
+    undoStack.redoStack = [];
+
+    const { obj, after } = change;
+
+    if (obj.type === 'table') {
+        const table = tables.value.find(t => t.id === obj.id);
+        if (table) {
+            Object.assign(table, after);
+        }
+    }
+    else if (obj.type === 'chair') {
+        for (const table of tables.value) {
+            const chair = table.chairs.find(c => c.id === obj.id);
+            if (chair) {
+                Object.assign(chair, after);
+                break;
+            }
         }
     }
 }
 
-onMounted(() => {
-    const stageInstance = new Konva.Stage({
-        container: 'container',
-        width: 500,
-        height: 500,
-        scaleX: 0.3,
-        scaleY: 0.3,
-        draggable: true,
-    });
-
-    const layerInstance = new Konva.Layer();
-
-    layerInstance.add(globalThis.transformer);
-    stageInstance.add(layerInstance);
-    stageInstance.on('click', handleStageClick);
-
-    stage.value = stageInstance;
-    layer.value = layerInstance;
-
-    loadPlan(planData.value);
-});
-
-onUnmounted(() => {
-    // Clean-up logic
-});
-
-watchEffect(() => {
-    // Watcher for planData changes
-});
-
-// Methods
-function loadPlan(planData: PlanData) {
-    for (const tableConfig of planData.tables) {
-        const table = new Table(layer.value!, tableConfig.shape, tableConfig.x, tableConfig.y);
-        model.tables.set(table.id, table);
-    }
-}
-
 function undo() {
-    globalThis.undoStack.applyUndo();
+    if (undoStack.changes.length === 0)
+        return;
+
+    const change = undoStack.changes.pop()!;
+    undoStack.redoStack.push(change);
+
+    const { obj, before } = change;
+
+    if (obj.type === 'table') {
+        const table = tables.value.find(t => t.id === obj.id);
+        if (table) {
+            Object.assign(table, before);
+        }
+    }
+    else if (obj.type === 'chair') {
+        for (const table of tables.value) {
+            const chair = table.chairs.find(c => c.id === obj.id);
+            if (chair) {
+                Object.assign(chair, before);
+                break;
+            }
+        }
+    }
 }
 
 function redo() {
-    globalThis.undoStack.applyRedo();
+    if (undoStack.redoStack.length === 0)
+        return;
+
+    const change = undoStack.redoStack.pop()!;
+    undoStack.changes.push(change);
+
+    const { obj, after } = change;
+
+    if (obj.type === 'table') {
+        const table = tables.value.find(t => t.id === obj.id);
+        if (table) {
+            Object.assign(table, after);
+        }
+    }
+    else if (obj.type === 'chair') {
+        for (const table of tables.value) {
+            const chair = table.chairs.find(c => c.id === obj.id);
+            if (chair) {
+                Object.assign(chair, after);
+                break;
+            }
+        }
+    }
+}
+
+function setTableFocus(tableId: string) {
+    // Clear focus on all tables
+    tables.value.forEach((table) => {
+        table.focus = table.id === tableId;
+    });
+
+    focusedTableId.value = tableId;
+}
+
+function handleStageClick(e) {
+    // If clicking on the stage (not a table), clear focus
+    if (e.target.getClassName() === 'Stage') {
+        tables.value.forEach((table) => {
+            table.focus = false;
+        });
+        focusedTableId.value = null;
+    }
 }
 
 function addChair() {
-    if (globalThis.transformer.nodes().length === 0) {
+    if (!focusedTableId.value)
+        return;
+
+    const table = tables.value.find(t => t.id === focusedTableId.value);
+    if (!table)
+        return;
+
+    if (table.tableType.indexOf('circle') !== 0) {
+        alert('Can only add chairs to circle tables!');
         return;
     }
-    const shape = globalThis.transformer.nodes()[0];
-    const table = model.tables.get(shape.getAttr('tableId'));
 
-    if (table.tableShape !== 'circle') {
-        // eslint-disable-next-line no-alert
-        alert('Can only add chairs to circle tables!');
-        return false;
-    }
+    // Calculate position for new chair
+    const visibleChairs = table.chairs.filter(c => c.visible);
+    const chairCount = visibleChairs.length + 1;
+    const chairAngle = 360 / chairCount;
 
-    // make a new chair and add it to the table
-    const chair = table.addChair();
+    // Recalculate positions for all chairs
+    const config = tableData[table.tableType];
+    const radius = config.radius;
+    const outerRadius = radius + 60;
 
-    const changeData: Change = {
+    // Create new chair
+    const newChair: Chair = {
+        id: uuidv4(),
+        position: { x: 0, y: -outerRadius },
+        angle: 90,
+        visible: true,
+        parentId: table.id,
+    };
+
+    // Add to table
+    table.chairs.push(newChair);
+
+    // Record change for undo
+    applyChange({
         obj: {
             type: 'chair',
-            id: chair.id,
+            id: newChair.id,
         },
         before: {
             visible: false,
@@ -131,41 +302,125 @@ function addChair() {
         after: {
             visible: true,
         },
-    };
+    });
 
-    // apply the change object
-    globalThis.undoStack.apply(changeData);
+    // Recalculate all chair positions
+    updateCircleChairPositions(table);
+}
+
+function updateCircleChairPositions(table: Table) {
+    if (table.tableType.indexOf('circle') !== 0)
+        return;
+
+    const visibleChairs = table.chairs.filter(c => c.visible);
+    const chairCount = visibleChairs.length;
+    const chairAngle = 360 / chairCount;
+
+    const config = tableData[table.tableType];
+    const radius = config.radius;
+    const outerRadius = radius + 60;
+
+    visibleChairs.forEach((chair, index) => {
+        const angle = chairAngle * index;
+        const radians = angle * (Math.PI / 180);
+
+        chair.position = {
+            x: Math.sin(radians) * outerRadius,
+            y: -Math.cos(radians) * outerRadius,
+        };
+        chair.angle = angle + 90;
+    });
 }
 
 function setDiet(diet: string) {
-    if (transformer.nodes().length > 0) {
-        const shape = transformer.nodes()[0];
-        const table = model.tables.get(shape.getAttr('tableId'));
+    if (!focusedTableId.value)
+        return;
 
-        // set up the change object
-        const changeData: Change = {
-            obj: {
-                type: 'table',
-                id: table.id,
-            },
-            before: {
-                diet: table.diet,
-            },
-            after: {
-                diet,
-            },
-        };
+    const table = tables.value.find(t => t.id === focusedTableId.value);
+    if (!table)
+        return;
 
-        // apply the change object
-        undoStack.apply(changeData);
+    applyChange({
+        obj: {
+            type: 'table',
+            id: table.id,
+        },
+        before: {
+            diet: table.diet,
+        },
+        after: {
+            diet,
+        },
+    });
+}
+
+function checkTableOverlap(tableId: string) {
+    const table = tables.value.find(t => t.id === tableId);
+    if (!table)
+        return false;
+
+    // Simple overlap detection - in a real app you'd use more sophisticated collision detection
+    for (const otherTable of tables.value) {
+        if (otherTable.id === tableId)
+            continue;
+
+        const dx = table.position.x - otherTable.position.x;
+        const dy = table.position.y - otherTable.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Get table dimensions
+        const tableConfig = tableData[table.tableType];
+        const otherConfig = tableData[otherTable.tableType];
+
+        let tableSize, otherSize;
+
+        if (tableConfig.shape === 'rect') {
+            tableSize = Math.max(tableConfig.width, tableConfig.height);
+        }
+        else {
+            tableSize = tableConfig.radius * 2;
+        }
+
+        if (otherConfig.shape === 'rect') {
+            otherSize = Math.max(otherConfig.width, otherConfig.height);
+        }
+        else {
+            otherSize = otherConfig.radius * 2;
+        }
+
+        // Simple collision check - would need refinement for production
+        if (distance < (tableSize + otherSize) / 2) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function handleTableDragEnd(tableId: string) {
+    const table = tables.value.find(t => t.id === tableId);
+    if (!table)
+        return;
+
+    if (checkTableOverlap(tableId)) {
+        alert('Tables may not overlap!');
+        // Revert position
+        const lastChange = undoStack.changes[undoStack.changes.length - 1];
+        if (lastChange && lastChange.obj.id === tableId) {
+            table.position = lastChange.before.position;
+        }
     }
 }
+
+// Initialize
+onMounted(() => {
+    loadPlan();
+});
 </script>
 
 <template>
     <div>
-        <div class="space-x-2">
-            <!-- Buttons for Undo, Redo, Add Chair, Diet buttons -->
+        <div class="mb-4 space-x-2">
             <button class="rounded-lg border border-gray-500 bg-gray-200 px-2 py-1 text-sm" @click="undo">
                 Undo
             </button>
@@ -186,10 +441,37 @@ function setDiet(diet: string) {
             </button>
         </div>
 
-        <v-stage ref="stage">
-            <v-layer ref="layer">
-                <v-transformer />
-            </v-layer>
-        </v-stage>
+        <div id="container">
+            <v-stage
+                :config="stageConfig"
+                @click="handleStageClick"
+            >
+                <v-layer>
+                    <RestaurantTable
+                        v-for="table in tables"
+                        :id="table.id"
+                        :key="table.id"
+                        :position="table.position"
+                        :rotation="table.rotation"
+                        :diet="table.diet"
+                        :focus="table.focus"
+                        :table-type="table.tableType"
+                        :chairs="table.chairs"
+                        @focus="setTableFocus"
+                        @dragend="handleTableDragEnd"
+                    />
+
+                    <v-transformer
+                        v-if="focusedTableId"
+                        :config="{
+                            nodes: [`.table-${focusedTableId}`],
+                            padding: 5,
+                            enabledAnchors: [],
+                            rotateAnchorOffset: 20,
+                        }"
+                    />
+                </v-layer>
+            </v-stage>
+        </div>
     </div>
 </template>
