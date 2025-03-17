@@ -24,7 +24,13 @@ Route::middleware([
     Route::get('/restaurant', function () {
         return Inertia::render('RestaurantPage');
     })->name('restaurant');
-    Route::get('/restaurant-old', function () {
-        return Inertia::render('RestaurantPageOld');
+    Route::get('/restaurant-orig', function () {
+        return Inertia::render('RestaurantPageOrig');
     })->name('restaurant-old');
+    Route::get('/restaurant-example', function () {
+        return Inertia::render('RestaurantExamplePage');
+    })->name('restaurant-example');
+    Route::get('/konva-example', function () {
+        return Inertia::render('KonvaExamplePage');
+    })->name('konva-example');
 });

@@ -1,18 +1,51 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import type Konva from 'konva';
 import RestaurantChair from './RestaurantChair.vue';
+import type { Chair, Diet, Position } from '@/types';
 
-const props = defineProps({
-    id: { type: String, required: true },
-    position: { type: Object, required: true },
-    rotation: { type: Number, default: 0 },
-    diet: { type: String, default: 'Omnivore' },
-    focus: { type: Boolean, default: false },
-    tableType: { type: String, required: true },
-    chairs: { type: Array, required: true },
-});
+// https://stackoverflow.com/questions/79003110/in-vue-konva-what-is-the-type-of-proxy-that-has-getnode-function
+interface VueKonvaProxy<Group> { getNode: () => Group }
+
+// const props = defineProps({
+//     id: { type: String, required: true },
+//     position: { type: Object, required: true },
+//     rotation: { type: Number, default: 0 },
+//     diet: { type: String, default: 'Omnivore' },
+//     focus: { type: Boolean, default: false },
+//     tableType: { type: String, required: true },
+//     chairs: { type: Array, required: true },
+// });
+
+const props = withDefaults(
+    defineProps<{
+        id: string;
+        position: Position;
+        rotation?: number;
+        diet?: Diet;
+        focus?: boolean;
+        tableType: string;
+        chairs: Chair[];
+    }>(),
+    {
+        rotation: 0,
+        diet: 'Omnivore',
+        focus: false,
+    },
+);
 
 const emit = defineEmits(['update:position', 'update:rotation', 'focus', 'dragend', 'transformend']);
+
+// Set up a ref to the Konva group containing the table
+const tableGroup = ref<VueKonvaProxy<Konva.Group> | null>(null);
+
+// Expose the Konva node through a method
+defineExpose({
+    getKonvaNode() {
+        return tableGroup.value?.getNode();
+    },
+    id: props.id,
+});
 
 // Table configuration data
 const tableData = {
@@ -64,7 +97,7 @@ const tableFill = computed(() => {
 });
 
 // Calculate outer rect for chair positioning
-const outerRect = computed(() => {
+computed(() => {
     const chairSize = { outerWidth: 60, outerHeight: 60 };
     if (tableShape.value === 'rect') {
         const width = tableConfig.value.width + 2 * chairSize.outerWidth / 2;
@@ -92,12 +125,12 @@ function handleClick() {
     emit('focus', props.id);
 }
 
-function handleDragEnd(e) {
-    emit('update:position', { x: e.target.x(), y: e.target.y() });
-    emit('dragend', props.id);
+function handleDragEnd(tableGroup: Konva.Group) {
+    emit('update:position', { x: tableGroup.x(), y: tableGroup.y() });
+    emit('dragend', tableGroup, props.id);
 }
 
-function handleTransformEnd(e) {
+function handleTransformEnd(e: Konva.KonvaEventObject<Konva.Group>) {
     emit('update:rotation', e.target.rotation());
     emit('transformend', props.id);
 }
@@ -105,14 +138,15 @@ function handleTransformEnd(e) {
 
 <template>
     <v-group
+        ref="tableGroup"
         :x="position.x"
         :y="position.y"
         :rotation="rotation"
-        draggable
+        :draggable="true"
         :name="`table-${id}`"
         :data-table-id="id"
         @click="handleClick"
-        @dragend="handleDragEnd"
+        @dragend="handleDragEnd($event.target)"
         @transformend="handleTransformEnd"
     >
         <!-- Table shape -->

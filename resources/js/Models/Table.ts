@@ -310,8 +310,8 @@ export default class Table {
                 totalChairs = totalChairs + (chair.visible ? 1 : 0);
             }
             const chairAngle = 360 / totalChairs;
-            // eslint-disable-next-line no-console
-            console.log(`Chair count ${totalChairs} Angle = ${chairAngle}`);
+
+            // console.log(`Chair count ${totalChairs} Angle = ${chairAngle}`);
             const startY = -1 * this.outerRect!.width / 2;
             const startX = 0;
 
@@ -366,6 +366,7 @@ export default class Table {
 
     // Check if this table overlaps another - used in drop phase of drag & drop
     hitCheck() {
+        console.log(this.konvaShape);
         let isOverlapping = false;
         const r1: IRect = this.konvaShape!.getClientRect();
 

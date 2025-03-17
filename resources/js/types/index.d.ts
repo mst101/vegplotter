@@ -1,28 +1,8 @@
 import type { Config } from 'ziggy-js';
-import type Table from '@/Models/Table';
-import type Chair from '@/Models/Chair';
+// import type Table from '@/Models/Table';
+// import type Chair from '@/Models/Chair';
 
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string;
-}
-
-type DateTime = string;
-
-export type ButtonType = 'button' | 'submit' | 'reset' | undefined;
-
-export type Nullable<T> = T | null;
-
-export type TeamUser = Nullable<
-    User & {
-        all_teams?: Team[];
-        current_team?: Team;
-    }
->;
-
-export interface User {
+interface User {
     id: number;
     name: string;
     email: string;
@@ -35,13 +15,26 @@ export interface User {
     updated_at: DateTime;
 }
 
+type DateTime = string;
+
+type ButtonType = 'button' | 'submit' | 'reset' | undefined;
+
+type Nullable<T> = T | null;
+
+type TeamUser = Nullable<
+    User & {
+        all_teams?: Team[];
+        current_team?: Team;
+    }
+>;
+
 interface UserMembership extends User {
     membership: {
         role: string;
     };
 }
 
-export type PageProps<
+type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: Auth;
@@ -67,7 +60,7 @@ export type PageProps<
     };
 };
 
-export interface Team {
+interface Team {
     id: number;
     name: string;
     personal_team: boolean;
@@ -75,7 +68,7 @@ export interface Team {
     updated_at: DateTime;
 }
 
-export interface Auth {
+interface Auth {
     user: Nullable<
         User & {
             all_teams?: Team[];
@@ -84,7 +77,7 @@ export interface Auth {
     >;
 }
 
-export interface Session {
+interface Session {
     id: number;
     ip_address: string;
     is_current_device: boolean;
@@ -96,7 +89,7 @@ export interface Session {
     last_active: DateTime;
 }
 
-export interface ApiToken {
+interface ApiToken {
     id: number;
     name: string;
     abilities: string[];
@@ -105,7 +98,7 @@ export interface ApiToken {
     updated_at: DateTime;
 }
 
-export interface JetstreamTeamPermissions {
+interface JetstreamTeamPermissions {
     canAddTeamMembers: boolean;
     canDeleteTeam: boolean;
     canRemoveTeamMembers: boolean;
@@ -113,14 +106,14 @@ export interface JetstreamTeamPermissions {
     canUpdateTeamMembers: boolean;
 }
 
-export interface Role {
+interface Role {
     key: string;
     name: string;
     permissions: string[];
     description: string;
 }
 
-export interface TeamInvitation {
+interface TeamInvitation {
     id: number;
     team_id: number;
     email: string;
@@ -130,22 +123,70 @@ export interface TeamInvitation {
 }
 
 // Custom types
-export interface Model {
+interface Chair {
+    id: string;
+    position: Position;
+    angle: number;
+    visible: boolean;
+    parentId: string;
+}
+
+interface Table {
+    id: string;
+    position: Position;
+    rotation: number;
+    diet: Diet;
+    tableType: string;
+    focus: boolean;
+    chairs: Chair[];
+}
+
+// Define the common properties for all table shapes
+interface BaseTableData {
+    diet?: string;
+    focus?: boolean;
+    tableType?: string;
+    chairPositions: ChairPosition[];
+    shape: 'rect' | 'circle';
+}
+
+// Rectangle-specific properties
+interface RectTableData extends BaseTableData {
+    shape: 'rect';
+    width: number;
+    height: number;
+    radius?: never; // Explicitly not allowed for rectangles
+}
+
+// Circle-specific properties
+interface CircleTableData extends BaseTableData {
+    shape: 'circle';
+    radius: number;
+    width?: never; // Explicitly not allowed for circles
+    height?: never; // Explicitly not allowed for circles
+}
+
+// The final union type
+type TableData = RectTableData | CircleTableData;
+
+type Diet = 'Omnivore' | 'Vegetarian' | 'Pescatarian';
+
+interface Model {
     tables: Map<string, Table>;
     chairs: Map<string, Chair>;
 }
 
-export interface TableConfig {
+interface TableConfig {
     shape: string;
     x: number;
     y: number;
 }
 
-export interface PlanData {
+interface PlanData {
     tables: TableConfig[];
 }
 
-export interface Position {
+interface Position {
     x: number;
     y: number;
 }
@@ -157,4 +198,10 @@ interface Change {
     };
     before: Record<string, any>;
     after: Record<string, any>;
+}
+
+interface ChairPosition {
+    x: number;
+    y: number;
+    angle: number;
 }
