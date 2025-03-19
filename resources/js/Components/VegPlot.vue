@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+
+interface VueKonvaRef<T> {
+    getNode: () => T;
+    // Add other Vue Konva methods as needed
+}
 
 // Setup reactive state
 const updateKey = ref(0);
@@ -66,7 +71,6 @@ const xAxisTicks = computed(() => {
     const plotStartX = plotAreaConfig.value.x!;
     const plotWidth = plotAreaConfig.value.width!;
 
-    // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotWidth / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
@@ -84,7 +88,6 @@ const yAxisTicks = computed(() => {
     const plotStartY = plotAreaConfig.value.y!;
     const plotHeight = plotAreaConfig.value.height!;
 
-    // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotHeight / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
@@ -119,6 +122,16 @@ function resizeStage() {
 }
 
 window.addEventListener('resize', resizeStage);
+
+onMounted(() => {
+    if (grid.value) {
+        const gridNode = (grid.value as any).getNode();
+        if (gridNode) {
+            gridNode.cache();
+            (background.value as any).getNode()?.batchDraw();
+        }
+    }
+});
 </script>
 
 <template>
@@ -130,6 +143,7 @@ window.addEventListener('resize', resizeStage);
         >
             <v-layer ref="background" name="background">
                 <v-group
+                    id="grid-group"
                     ref="grid"
                     name="grid"
                     :config="gridConfig"

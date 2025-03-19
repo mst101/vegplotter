@@ -39,6 +39,11 @@ const gridHeight = computed(() => {
 });
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
+    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
+    const maxX = 0;
+    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
+    const maxY = 0;
+
     return {
         x: 0,
         y: 0,
@@ -47,6 +52,11 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         scaleX: 1,
         scaleY: 1,
         draggable: true,
+        dragBoundFunc: (pos: { x: number; y: number }) => {
+            const newX = Math.max(minX, Math.min(maxX, pos.x));
+            const newY = Math.max(minY, Math.min(maxY, pos.y));
+            return { x: newX, y: newY };
+        },
     };
 });
 
@@ -55,14 +65,12 @@ const xAxisTicks = computed(() => {
     const ticks = [];
     const plotStartX = plotAreaConfig.value.x!;
     const plotWidth = plotAreaConfig.value.width!;
-    const gridX = grid.value ? grid.value.x() : 0;
 
-    // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotWidth / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
-            x: plotStartX + (i * 100) + gridX,
+            x: plotStartX + (i * 100),
             text: `${i}m`,
         });
     }
@@ -74,14 +82,12 @@ const yAxisTicks = computed(() => {
     const ticks = [];
     const plotStartY = plotAreaConfig.value.y!;
     const plotHeight = plotAreaConfig.value.height!;
-    const gridY = grid.value ? grid.value.y() : 0;
 
-    // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotHeight / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
-            y: plotStartY + (i * 100) + gridY,
+            y: plotStartY + (i * 100),
             text: `${i}m`,
         });
     }
@@ -89,27 +95,20 @@ const yAxisTicks = computed(() => {
     return ticks;
 });
 
+const axisLabelsOffsetX = ref(0);
+const axisLabelsOffsetY = ref(0);
+
 // Methods
-function constrainGridPosition(grid: Konva.Group) {
-    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
-    const maxX = 0;
-    const newX = Math.max(minX, Math.min(maxX, grid.x()));
-
-    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
-    const maxY = 0;
-    const newY = Math.max(minY, Math.min(maxY, grid.y()));
-
-    grid.position({ x: newX, y: newY });
-}
-
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
-    constrainGridPosition(e.target);
-    updateKey.value++; // Force update of tick marks
+    axisLabelsOffsetX.value = e.target.x();
+    axisLabelsOffsetY.value = e.target.y();
+    gridConfig.value.x = e.target.x();
+    gridConfig.value.y = e.target.y();
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
-    constrainGridPosition(e.target);
-    updateKey.value++; // Force update of tick marks
+    axisLabelsOffsetX.value = e.target.x();
+    axisLabelsOffsetY.value = e.target.y();
 }
 
 function resizeStage() {
@@ -124,6 +123,7 @@ window.addEventListener('resize', resizeStage);
     <div class="space-x-2">
         <v-stage
             ref="stage"
+            :key="updateKey"
             :config="stageConfig"
         >
             <v-layer ref="background" name="background">
@@ -204,51 +204,57 @@ window.addEventListener('resize', resizeStage);
                 />
 
                 <!-- X-axis tick marks and labels -->
-                <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
-                    <v-line
-                        :config="{
-                            x: tick.x,
-                            y: 15,
-                            points: [0, 0, 0, 5],
-                            stroke: 'white',
-                            strokeWidth: 1,
-                        }"
-                    />
-                    <v-text
-                        :config="{
-                            x: tick.x - 7,
-                            y: 3,
-                            text: tick.text,
-                            fontSize: 10,
-                            fill: 'white',
-                            align: 'center',
-                        }"
-                    />
-                </template>
+                <v-group
+                    :config="{ x: axisLabelsOffsetX }"
+                >
+                    <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
+                        <v-line
+                            :config="{
+                                x: tick.x,
+                                y: 15,
+                                points: [0, 0, 0, 5],
+                                stroke: 'white',
+                                strokeWidth: 1,
+                            }"
+                        />
+                        <v-text
+                            :config="{
+                                x: tick.x - 7,
+                                y: 3,
+                                text: tick.text,
+                                fontSize: 10,
+                                fill: 'white',
+                                align: 'center',
+                            }"
+                        />
+                    </template>
+                </v-group>
 
                 <!-- Y-axis tick marks and labels -->
-                <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
-                    <v-line
-                        :config="{
-                            x: 15,
-                            y: tick.y,
-                            points: [0, 0, 5, 0],
-                            stroke: 'white',
-                            strokeWidth: 1,
-                        }"
-                    />
-                    <v-text
-                        :config="{
-                            x: 3,
-                            y: tick.y + 7,
-                            text: tick.text,
-                            fontSize: 10,
-                            rotation: 270,
-                            fill: 'white',
-                            align: 'left',
-                        }"
-                    />
-                </template>
+                <v-group :config="{ y: axisLabelsOffsetY }">
+                    <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
+                        <v-line
+                            :config="{
+                                x: 15,
+                                y: tick.y,
+                                points: [0, 0, 5, 0],
+                                stroke: 'white',
+                                strokeWidth: 1,
+                            }"
+                        />
+                        <v-text
+                            :config="{
+                                x: 3,
+                                y: tick.y + 7,
+                                text: tick.text,
+                                fontSize: 10,
+                                rotation: 270,
+                                fill: 'white',
+                                align: 'left',
+                            }"
+                        />
+                    </template>
+                </v-group>
             </v-layer>
         </v-stage>
     </div>
