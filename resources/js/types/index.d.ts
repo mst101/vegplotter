@@ -172,7 +172,7 @@ type TableData = RectTableData | CircleTableData;
 type Diet = 'Omnivore' | 'Vegetarian' | 'Pescatarian';
 
 interface Model {
-    tables: Map<string, Table>;
+    flowerBeds: Map<string, FlowerBeds>;
     chairs: Map<string, Chair>;
 }
 
@@ -204,4 +204,20 @@ interface ChairPosition {
     x: number;
     y: number;
     angle: number;
+}
+
+interface FlowerBed {
+    rotation: number;
+    name: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    fill: string;
+    scaleX?: number;
+    scaleY?: number;
+    stroke: string;
+    strokeWidth: number;
+    draggable: boolean;
+    dragBoundFunc: (pos: Position) => Position;
 }

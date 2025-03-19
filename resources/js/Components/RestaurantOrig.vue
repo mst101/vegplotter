@@ -9,7 +9,7 @@ import {
 } from 'vue';
 import Konva from 'konva';
 import Table from '@/Models/Table';
-import UndoStack from '@/Utils/UndoStack';
+import UndoStackOld from '@/Utils/UndoStackOld';
 import type { Change, Model, PlanData } from '@/types';
 
 // Reactive data
@@ -29,7 +29,7 @@ globalThis.model = reactive<Model>({
 });
 
 // create the undo handler instance
-globalThis.undoStack = new UndoStack();
+globalThis.undoStack = new UndoStackOld();
 
 // Vue lifecycle hooks
 const stage = ref<Konva.Stage>();

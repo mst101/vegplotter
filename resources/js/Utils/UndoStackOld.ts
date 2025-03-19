@@ -1,7 +1,7 @@
 import Utils from '@/Utils/Konva';
 import type { Change } from '@/types';
 
-export default class UndoStack {
+export default class UndoStackOld {
     undoStack: Change[] = [];
     idx: number = -1; // indicates the current slot in the stack
     max: number = -1; // marks the upper limit of the stack.
