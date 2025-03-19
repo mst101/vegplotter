@@ -55,13 +55,14 @@ const xAxisTicks = computed(() => {
     const ticks = [];
     const plotStartX = plotAreaConfig.value.x!;
     const plotWidth = plotAreaConfig.value.width!;
+    const gridX = grid.value ? grid.value.x() : 0;
 
     // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotWidth / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
-            x: plotStartX + (i * 100),
+            x: plotStartX + (i * 100) + gridX,
             text: `${i}m`,
         });
     }
@@ -73,13 +74,14 @@ const yAxisTicks = computed(() => {
     const ticks = [];
     const plotStartY = plotAreaConfig.value.y!;
     const plotHeight = plotAreaConfig.value.height!;
+    const gridY = grid.value ? grid.value.y() : 0;
 
     // Calculate number of ticks (1 tick per meter, 100px = 1m)
     const numTicks = Math.ceil(plotHeight / 100) + 1;
 
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
-            y: plotStartY + (i * 100),
+            y: plotStartY + (i * 100) + gridY,
             text: `${i}m`,
         });
     }
@@ -102,10 +104,12 @@ function constrainGridPosition(grid: Konva.Group) {
 
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
     constrainGridPosition(e.target);
+    updateKey.value++; // Force update of tick marks
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     constrainGridPosition(e.target);
+    updateKey.value++; // Force update of tick marks
 }
 
 function resizeStage() {
@@ -120,7 +124,6 @@ window.addEventListener('resize', resizeStage);
     <div class="space-x-2">
         <v-stage
             ref="stage"
-            :key="updateKey"
             :config="stageConfig"
         >
             <v-layer ref="background" name="background">
@@ -202,29 +205,25 @@ window.addEventListener('resize', resizeStage);
 
                 <!-- X-axis tick marks and labels -->
                 <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
-                    <v-group
-                        :config="{ x: 0 }"
-                    >
-                        <v-line
-                            :config="{
-                                x: tick.x,
-                                y: 15,
-                                points: [0, 0, 0, 5],
-                                stroke: 'white',
-                                strokeWidth: 1,
-                            }"
-                        />
-                        <v-text
-                            :config="{
-                                x: tick.x - 7,
-                                y: 3,
-                                text: tick.text,
-                                fontSize: 10,
-                                fill: 'white',
-                                align: 'center',
-                            }"
-                        />
-                    </v-group>
+                    <v-line
+                        :config="{
+                            x: tick.x,
+                            y: 15,
+                            points: [0, 0, 0, 5],
+                            stroke: 'white',
+                            strokeWidth: 1,
+                        }"
+                    />
+                    <v-text
+                        :config="{
+                            x: tick.x - 7,
+                            y: 3,
+                            text: tick.text,
+                            fontSize: 10,
+                            fill: 'white',
+                            align: 'center',
+                        }"
+                    />
                 </template>
 
                 <!-- Y-axis tick marks and labels -->
