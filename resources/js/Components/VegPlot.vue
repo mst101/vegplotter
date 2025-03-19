@@ -15,7 +15,7 @@ const stageConfig = ref<Konva.ContainerConfig>({
 const plotAreaConfig = ref<Konva.GroupConfig>({
     x: 100,
     y: 100,
-    width: 400,
+    width: 1000,
     height: 1000,
     fill: '#eee',
     stroke: 'black',
@@ -36,7 +36,7 @@ const gridHeight = computed(() => {
     return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 100;
 });
 
-const gridConfig: Konva.GroupConfig = computed(() => {
+const gridConfig = computed<Konva.GroupConfig>(() => {
     return {
         x: 0,
         y: 0,
@@ -49,9 +49,24 @@ const gridConfig: Konva.GroupConfig = computed(() => {
 });
 
 // Methods
+function constrainGridPosition(grid: Konva.Group) {
+    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
+    const maxX = 0;
+    const newX = Math.max(minX, Math.min(maxX, grid.x()));
+
+    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
+    const maxY = 0;
+    const newY = Math.max(minY, Math.min(maxY, grid.y()));
+
+    grid.position({ x: newX, y: newY });
+}
+
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
-    // gridConfig.value.x = e.target.x();
-    // gridConfig.value.y = e.target.y();
+    constrainGridPosition(e.target);
+}
+
+function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
+    constrainGridPosition(e.target);
 }
 
 function resizeStage() {
@@ -73,6 +88,7 @@ window.addEventListener('resize', resizeStage);
                     name="grid"
                     :config="gridConfig"
                     @dragend="handleGridDragEnd"
+                    @dragmove="handleGridDragMove"
                 >
                     <v-rect
                         name="grid-background"
