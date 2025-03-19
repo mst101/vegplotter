@@ -39,6 +39,11 @@ const gridHeight = computed(() => {
 });
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
+    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
+    const maxX = 0;
+    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
+    const maxY = 0;
+
     return {
         x: 0,
         y: 0,
@@ -47,6 +52,11 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         scaleX: 1,
         scaleY: 1,
         draggable: true,
+        dragBoundFunc: (pos: { x: number; y: number }) => {
+            const newX = Math.max(minX, Math.min(maxX, pos.x));
+            const newY = Math.max(minY, Math.min(maxY, pos.y));
+            return { x: newX, y: newY };
+        },
     };
 });
 
@@ -87,25 +97,20 @@ const yAxisTicks = computed(() => {
     return ticks;
 });
 
+const axisLabelsOffsetX = ref(0);
+const axisLabelsOffsetY = ref(0);
+
 // Methods
-function constrainGridPosition(grid: Konva.Group) {
-    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
-    const maxX = 0;
-    const newX = Math.max(minX, Math.min(maxX, grid.x()));
-
-    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
-    const maxY = 0;
-    const newY = Math.max(minY, Math.min(maxY, grid.y()));
-
-    grid.position({ x: newX, y: newY });
-}
-
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
-    constrainGridPosition(e.target);
+    axisLabelsOffsetX.value = e.target.x();
+    axisLabelsOffsetY.value = e.target.y();
+    gridConfig.value.x = e.target.x();
+    gridConfig.value.y = e.target.y();
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
-    constrainGridPosition(e.target);
+    axisLabelsOffsetX.value = e.target.x();
+    axisLabelsOffsetY.value = e.target.y();
 }
 
 function resizeStage() {
@@ -201,10 +206,10 @@ window.addEventListener('resize', resizeStage);
                 />
 
                 <!-- X-axis tick marks and labels -->
-                <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
-                    <v-group
-                        :config="{ x: 0 }"
-                    >
+                <v-group
+                    :config="{ x: axisLabelsOffsetX }"
+                >
+                    <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
                         <v-line
                             :config="{
                                 x: tick.x,
@@ -224,32 +229,34 @@ window.addEventListener('resize', resizeStage);
                                 align: 'center',
                             }"
                         />
-                    </v-group>
-                </template>
+                    </template>
+                </v-group>
 
                 <!-- Y-axis tick marks and labels -->
-                <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
-                    <v-line
-                        :config="{
-                            x: 15,
-                            y: tick.y,
-                            points: [0, 0, 5, 0],
-                            stroke: 'white',
-                            strokeWidth: 1,
-                        }"
-                    />
-                    <v-text
-                        :config="{
-                            x: 3,
-                            y: tick.y + 7,
-                            text: tick.text,
-                            fontSize: 10,
-                            rotation: 270,
-                            fill: 'white',
-                            align: 'left',
-                        }"
-                    />
-                </template>
+                <v-group :config="{ y: axisLabelsOffsetY }">
+                    <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
+                        <v-line
+                            :config="{
+                                x: 15,
+                                y: tick.y,
+                                points: [0, 0, 5, 0],
+                                stroke: 'white',
+                                strokeWidth: 1,
+                            }"
+                        />
+                        <v-text
+                            :config="{
+                                x: 3,
+                                y: tick.y + 7,
+                                text: tick.text,
+                                fontSize: 10,
+                                rotation: 270,
+                                fill: 'white',
+                                align: 'left',
+                            }"
+                        />
+                    </template>
+                </v-group>
             </v-layer>
         </v-stage>
     </div>
