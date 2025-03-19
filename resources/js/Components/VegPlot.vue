@@ -10,8 +10,8 @@ interface VueKonvaRef<T> {
 // Setup reactive state
 const updateKey = ref(0);
 const stage = ref<Konva.Stage | null>(null);
-const background = ref<Konva.Layer | null>(null);
-const grid = ref<Konva.Group | null>(null);
+const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
+const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<Konva.Layer | null>(null);
 
 const stageConfig = ref<Konva.ContainerConfig>({
@@ -125,11 +125,8 @@ window.addEventListener('resize', resizeStage);
 
 onMounted(() => {
     if (grid.value) {
-        const gridNode = (grid.value as any).getNode();
-        if (gridNode) {
-            gridNode.cache();
-            (background.value as any).getNode()?.batchDraw();
-        }
+        grid.value.getNode().cache();
+        background.value?.getNode().batchDraw();
     }
 });
 </script>

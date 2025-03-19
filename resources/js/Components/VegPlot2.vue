@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+
+interface VueKonvaRef<T> {
+    getNode: () => T;
+    // Add other Vue Konva methods as needed
+}
 
 // Setup reactive state
 const updateKey = ref(0);
@@ -117,6 +122,16 @@ function resizeStage() {
 }
 
 window.addEventListener('resize', resizeStage);
+
+onMounted(() => {
+    if (grid.value) {
+        const gridNode = (grid.value as any).getNode();
+        if (gridNode) {
+            gridNode.cache();
+            (background.value as any).getNode()?.batchDraw();
+        }
+    }
+});
 </script>
 
 <template>
@@ -128,6 +143,7 @@ window.addEventListener('resize', resizeStage);
         >
             <v-layer ref="background" name="background">
                 <v-group
+                    id="grid-group"
                     ref="grid"
                     name="grid"
                     :config="gridConfig"
