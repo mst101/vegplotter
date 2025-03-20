@@ -28,6 +28,8 @@ const plotAreaConfig = ref<Konva.GroupConfig>({
     stroke: 'black',
 });
 
+const scaleDisplay = ref(1);
+
 // Computed
 const gridWidth = computed(() => {
     if (plotAreaConfig.value.width! < stageConfig.value.width!) {
@@ -54,8 +56,8 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         y: 0,
         width: gridWidth.value,
         height: gridHeight.value,
-        scaleX: 1,
-        scaleY: 1,
+        scaleX: scaleDisplay,
+        scaleY: scaleDisplay,
         draggable: true,
         dragBoundFunc: (pos: { x: number; y: number }) => {
             const newX = Math.max(minX, Math.min(maxX, pos.x));
@@ -104,7 +106,6 @@ const axisLabelsOffsetX = ref(0);
 const axisLabelsOffsetY = ref(0);
 
 // scale related
-const scaleDisplay = ref(1);
 const scales = [
     5,
     4,
@@ -126,10 +127,8 @@ const scales = [
 ];
 let currentScaleIndex = 6;
 
-const stageScale = ref({ x: 1, y: 1 });
-
 function unScale(val: number) {
-    return val / stageScale.value.x;
+    return val / scaleDisplay.value;
 }
 
 // Methods
@@ -155,7 +154,7 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     e.evt.preventDefault();
 
     const stageNode = stage.value.getNode();
-    const oldScale = stageScale.value.x;
+    const oldScale = scaleDisplay.value;
     const pointer = stageNode?.getPointerPosition();
 
     if (!pointer)
@@ -176,8 +175,6 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     }
 
     const newScale = scales[currentScaleIndex];
-
-    stageScale.value = { x: newScale, y: newScale };
 
     gridConfig.value.x = pointer.x - mousePointTo.x * newScale;
     gridConfig.value.y = pointer.y - mousePointTo.y * newScale;
@@ -218,8 +215,8 @@ window.addEventListener('resize', resizeStage);
                     name="grid"
                     :config="{
                         ...gridConfig,
-                        scaleX: stageScale.x,
-                        scaleY: stageScale.y,
+                        scaleX: scaleDisplay,
+                        scaleY: scaleDisplay,
                     }"
                     @dragend="handleGridDragEnd"
                     @dragmove="handleGridDragMove"
