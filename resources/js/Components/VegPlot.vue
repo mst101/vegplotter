@@ -125,8 +125,8 @@ window.addEventListener('resize', resizeStage);
 
 onMounted(() => {
     if (grid.value) {
-        grid.value.getNode().cache();
-        background.value?.getNode().batchDraw();
+        grid.value.cache();
+        background.value?.batchDraw();
     }
 });
 </script>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '../Layouts/AppLayout.vue';
 import PageContainer from '../Pages/PageContainer.vue';
-import KonvaExample from '../Components/KonvaExample.vue';
+// import KonvaExample from '../Components/KonvaExample.vue';
+import MyGrid from '../Components/MyGrid.vue';
 
 defineOptions({
     layout: AppLayout,
@@ -10,6 +11,7 @@ defineOptions({
 
 <template>
     <PageContainer title="KonvaExample" :show-footer="false">
-        <KonvaExample />
+        <!--        <KonvaExample /> -->
+        <MyGrid />
     </PageContainer>
 </template>
