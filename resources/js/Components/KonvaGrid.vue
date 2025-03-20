@@ -71,14 +71,14 @@ onMounted(() => {
         width: width - 4,
         height: height - 4,
         strokeWidth: 4,
-        stroke: 'blue',
+        stroke: 'green',
     });
     const rStageFill = new Konva.Rect({
         x: 2,
         y: 2,
         width: width - 4,
         height: height - 4,
-        fill: 'blue',
+        fill: 'yellow',
         opacity: 0.2,
     });
 
@@ -98,7 +98,7 @@ onMounted(() => {
         x: stage.value.width() / 2,
         y: stage.value.height() / 2,
         radius: 50,
-        fill: 'blue',
+        fill: 'orange',
         draggable: true,
     });
     layer.value.add(circle);

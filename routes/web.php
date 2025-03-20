@@ -33,4 +33,13 @@ Route::middleware([
     Route::get('/konva-example', function () {
         return Inertia::render('KonvaExamplePage');
     })->name('konva-example');
+    Route::get('/grid', function () {
+        return Inertia::render('KonvaGridPage');
+    })->name('grid');
+    Route::get('/grid-claude', function () {
+        return Inertia::render('KonvaGridClaudePage');
+    })->name('grid-claude');
+    Route::get('/grid-gemini', function () {
+        return Inertia::render('KonvaGridGeminiPage');
+    })->name('grid-gemini');
 });

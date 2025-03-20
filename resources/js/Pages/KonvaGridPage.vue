@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '../Layouts/AppLayout.vue';
 import PageContainer from '../Pages/PageContainer.vue';
-import KonvaExample from '../Components/KonvaExample.vue';
+import KonvaGrid from '../Components/KonvaGrid.vue';
 
 defineOptions({
     layout: AppLayout,
@@ -9,7 +9,7 @@ defineOptions({
 </script>
 
 <template>
-    <PageContainer title="KonvaExample" :show-footer="false">
-        <KonvaExample />
+    <PageContainer title="KonvaGrid" :show-footer="false">
+        <KonvaGrid />
     </PageContainer>
 </template>
