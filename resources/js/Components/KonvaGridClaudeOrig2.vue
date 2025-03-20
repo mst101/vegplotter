@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const width = 800;
 const height = 400;
@@ -59,11 +59,28 @@ interface OffsetProps {
     y: number;
 }
 
-const stageRect = computed(() => {
+const stageRect = ref<RectProps>({ x1: 0, y1: 0, x2: 0, y2: 0 });
+const viewRect = ref<RectProps>({ x1: 0, y1: 0, x2: 0, y2: 0 });
+const fullRect = ref<RectProps>({ x1: 0, y1: 0, x2: 0, y2: 0 });
+const gridOffset = ref<OffsetProps>({ x: 0, y: 0 });
+const gridRect = ref<RectProps>({ x1: 0, y1: 0, x2: 0, y2: 0 });
+const gridFullRect = ref<RectProps>({ x1: 0, y1: 0, x2: 0, y2: 0 });
+
+// Grid lines
+const gridLines = ref<Array<{ key: string; config: any }>>([]);
+const viewportRect = ref({ x: 0, y: 0, width: 0, height: 0, stroke: 'red', strokeWidth: 4 });
+
+function unScale(val: number) {
+    return val / stageConfig.value.scaleX;
+}
+
+function calculateGridDimensions() {
     if (!stageRef.value)
-        return { x1: 0, y1: 0, x2: 0, y2: 0, offset: { x: 0, y: 0 } };
+        return;
+
     const stage = stageRef.value.getNode();
-    return {
+
+    stageRect.value = {
         x1: 0,
         y1: 0,
         x2: stage.width(),
@@ -73,57 +90,69 @@ const stageRect = computed(() => {
             y: unScale(stage.position().y),
         },
     };
-});
 
-const viewRect = computed(() => {
-    return {
+    viewRect.value = {
         x1: -stageRect.value.offset.x,
         y1: -stageRect.value.offset.y,
         x2: unScale(width) - stageRect.value.offset.x,
         y2: unScale(height) - stageRect.value.offset.y,
     };
-});
 
-const fullRect = computed(() => {
-    return {
+    fullRect.value = {
         x1: Math.min(stageRect.value.x1, viewRect.value.x1),
         y1: Math.min(stageRect.value.y1, viewRect.value.y1),
         x2: Math.max(stageRect.value.x2, viewRect.value.x2),
         y2: Math.max(stageRect.value.y2, viewRect.value.y2),
     };
-});
 
-const gridOffset = computed(() => {
-    if (!stageRef.value)
-        return { x: 0, y: 0 };
-    const stage = stageRef.value.getNode();
-    return {
+    gridOffset.value = {
         x: Math.ceil(unScale(stage.position().x) / stepSize) * stepSize,
         y: Math.ceil(unScale(stage.position().y) / stepSize) * stepSize,
     };
-});
 
-const gridRect = computed(() => {
-    return {
+    gridRect.value = {
         x1: -gridOffset.value.x,
         y1: -gridOffset.value.y,
         x2: unScale(width) - gridOffset.value.x + stepSize,
         y2: unScale(height) - gridOffset.value.y + stepSize,
     };
-});
 
-const gridFullRect = computed(() => {
-    return {
+    gridFullRect.value = {
         x1: Math.min(stageRect.value.x1, gridRect.value.x1),
         y1: Math.min(stageRect.value.y1, gridRect.value.y1),
         x2: Math.max(stageRect.value.x2, gridRect.value.x2),
         y2: Math.max(stageRect.value.y2, gridRect.value.y2),
     };
-});
 
-// Grid lines
-const gridLines = computed(() => {
-    const lines: Array<{ key: string; config: any }> = [];
+    // Update viewport rectangle
+    viewportRect.value = {
+        x: viewRect.value.x1 + 2,
+        y: viewRect.value.y1 + 2,
+        width: viewRect.value.x2 - viewRect.value.x1 - 4,
+        height: viewRect.value.y2 - viewRect.value.y1 - 4,
+        stroke: 'red',
+        strokeWidth: 4,
+    };
+
+    // Apply clipping if solution 4 is selected
+    if (currentSolution.value === 'solution4') {
+        gridLayerConfig.value.clip = {
+            x: viewRect.value.x1,
+            y: viewRect.value.y1,
+            width: viewRect.value.x2 - viewRect.value.x1,
+            height: viewRect.value.y2 - viewRect.value.y1,
+        };
+    }
+    else {
+        gridLayerConfig.value.clip = null;
+    }
+
+    drawLines();
+}
+
+function drawLines() {
+    gridLines.value = [];
+
     let rect: RectProps;
 
     switch (currentSolution.value) {
@@ -135,7 +164,7 @@ const gridLines = computed(() => {
 
             // Vertical lines
             for (let i = 0; i <= xSteps; i++) {
-                lines.push({
+                gridLines.value.push({
                     key: `v-${i}`,
                     config: {
                         x: i * stepSize,
@@ -148,7 +177,7 @@ const gridLines = computed(() => {
 
             // Horizontal lines
             for (let i = 0; i <= ySteps; i++) {
-                lines.push({
+                gridLines.value.push({
                     key: `h-${i}`,
                     config: {
                         y: i * stepSize,
@@ -178,7 +207,7 @@ const gridLines = computed(() => {
 
         // Vertical lines
         for (let i = 0; i <= xSteps; i++) {
-            lines.push({
+            gridLines.value.push({
                 key: `v-${i}`,
                 config: {
                     x: rect.x1 + i * stepSize,
@@ -192,7 +221,7 @@ const gridLines = computed(() => {
 
         // Horizontal lines
         for (let i = 0; i <= ySteps; i++) {
-            lines.push({
+            gridLines.value.push({
                 key: `h-${i}`,
                 config: {
                     x: rect.x1,
@@ -204,36 +233,6 @@ const gridLines = computed(() => {
             });
         }
     }
-    return lines;
-});
-
-const viewportRect = computed(() => {
-    return {
-        x: viewRect.value.x1 + 2,
-        y: viewRect.value.y1 + 2,
-        width: viewRect.value.x2 - viewRect.value.x1 - 4,
-        height: viewRect.value.y2 - viewRect.value.y1 - 4,
-        stroke: 'red',
-        strokeWidth: 4,
-    };
-});
-
-watch(currentSolution, (newSolution) => {
-    if (newSolution === 'solution4') {
-        gridLayerConfig.value.clip = {
-            x: viewRect.value.x1,
-            y: viewRect.value.y1,
-            width: viewRect.value.x2 - viewRect.value.x1,
-            height: viewRect.value.y2 - viewRect.value.y1,
-        };
-    }
-    else {
-        gridLayerConfig.value.clip = null;
-    }
-});
-
-function unScale(val: number) {
-    return val / stageConfig.value.scaleX;
 }
 
 function handleWheel(e) {
@@ -275,10 +274,12 @@ function handleWheel(e) {
     stageConfig.value.y = newPos.y;
 
     scaleDisplay.value = newScale;
+
+    calculateGridDimensions();
 }
 
 function handleDragEnd() {
-    // No need to call calculateGridDimensions here, as the computed properties will react to the stageConfig changes.
+    calculateGridDimensions();
 }
 
 function saveDefault() {
@@ -303,7 +304,12 @@ function downloadURI(uri: string, name: string) {
 function handleSolutionChange(event: Event) {
     const target = event.target as HTMLInputElement;
     currentSolution.value = target.value;
+    calculateGridDimensions();
 }
+
+onMounted(() => {
+    calculateGridDimensions();
+});
 </script>
 
 <template>
