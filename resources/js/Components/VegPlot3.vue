@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 interface VueKonvaRef<T> {
     getNode: () => T;
@@ -103,42 +103,12 @@ const yAxisTicks = computed(() => {
 const axisLabelsOffsetX = ref(0);
 const axisLabelsOffsetY = ref(0);
 
-// scale related
-const scaleDisplay = ref(1);
-const scales = [
-    5,
-    4,
-    3,
-    2.5,
-    2,
-    1.5,
-    1,
-    0.9,
-    0.8,
-    0.7,
-    0.6,
-    0.5,
-    0.4,
-    0.3,
-    0.2,
-    0.1,
-    0.05,
-];
-let currentScaleIndex = 6;
-
-const stageScale = ref({ x: 1, y: 1 });
-
-function unScale(val: number) {
-    return val / stageScale.value.x;
-}
-
 // Methods
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
     axisLabelsOffsetX.value = e.target.x();
     axisLabelsOffsetY.value = e.target.y();
     gridConfig.value.x = e.target.x();
     gridConfig.value.y = e.target.y();
-    updateKey.value++;
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
@@ -151,76 +121,29 @@ function resizeStage() {
     stageConfig.value.height = window.innerHeight;
 }
 
-function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
-    e.evt.preventDefault();
-
-    const stageNode = stage.value.getNode();
-    const oldScale = stageScale.value.x;
-    const pointer = stageNode?.getPointerPosition();
-
-    if (!pointer)
-        return;
-
-    const mousePointTo = {
-        x: (pointer.x - gridConfig.value.x!) / oldScale,
-        y: (pointer.y - gridConfig.value.y!) / oldScale,
-    };
-
-    const direction = e.evt.deltaY > 0 ? 1 : -1;
-
-    if (direction > 0) {
-        currentScaleIndex = currentScaleIndex > 0 ? currentScaleIndex - 1 : currentScaleIndex;
-    }
-    else {
-        currentScaleIndex = currentScaleIndex < scales.length - 1 ? currentScaleIndex + 1 : currentScaleIndex;
-    }
-
-    const newScale = scales[currentScaleIndex];
-
-    stageScale.value = { x: newScale, y: newScale };
-
-    gridConfig.value.x = pointer.x - mousePointTo.x * newScale;
-    gridConfig.value.y = pointer.y - mousePointTo.y * newScale;
-
-    axisLabelsOffsetX.value = gridConfig.value.x;
-    axisLabelsOffsetY.value = gridConfig.value.y;
-
-    scaleDisplay.value = newScale;
-    updateKey.value++;
-}
-
 window.addEventListener('resize', resizeStage);
 
-// onMounted(() => {
-//     if (grid.value) {
-//         grid.value.cache();
-//         background.value?.batchDraw();
-//     }
-// });
+onMounted(() => {
+    if (grid.value) {
+        grid.value.cache();
+        background.value?.batchDraw();
+    }
+});
 </script>
 
 <template>
     <div class="space-x-2">
-        <p class="space-x-4 px-2">
-            <span id="scaleDisplay">Scale: {{ scaleDisplay }}</span>
-            <span id="gridConfig">gridConfig: {{ gridConfig }}</span>
-        </p>
         <v-stage
             ref="stage"
             :key="updateKey"
             :config="stageConfig"
-            @wheel="handleWheel"
         >
             <v-layer ref="background" name="background">
                 <v-group
                     id="grid-group"
                     ref="grid"
                     name="grid"
-                    :config="{
-                        ...gridConfig,
-                        scaleX: stageScale.x,
-                        scaleY: stageScale.y,
-                    }"
+                    :config="gridConfig"
                     @dragend="handleGridDragEnd"
                     @dragmove="handleGridDragMove"
                 >

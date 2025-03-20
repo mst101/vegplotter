@@ -6,7 +6,6 @@ const height = 400;
 
 const stageRef = ref(null);
 const stepSize = 40;
-const currentSolution = ref('solution1');
 const scaleDisplay = ref(1);
 const scales = [
     5,
@@ -63,13 +62,6 @@ const viewRect = computed<RectProps>(() => ({
     y2: unScale(height) - stageRect.value.offset.y,
 }));
 
-const fullRect = computed<RectProps>(() => ({
-    x1: Math.min(0, viewRect.value.x1),
-    y1: Math.min(0, viewRect.value.y1),
-    x2: Math.max(width, viewRect.value.x2),
-    y2: Math.max(height, viewRect.value.y2),
-}));
-
 const gridOffset = computed<OffsetProps>(() => ({
     x: Math.ceil(unScale(stagePosition.value.x) / stepSize) * stepSize,
     y: Math.ceil(unScale(stagePosition.value.y) / stepSize) * stepSize,
@@ -91,78 +83,28 @@ const gridFullRect = computed<RectProps>(() => ({
 
 const gridLines = computed(() => {
     const lines: { x: number; y: number; points: number[] }[] = [];
-    let xSize: number, ySize: number, xSteps: number, ySteps: number, fullRectToUse: RectProps;
+    const xSize = gridFullRect.value.x2 - gridFullRect.value.x1;
+    const ySize = gridFullRect.value.y2 - gridFullRect.value.y1;
+    const xSteps = Math.round(xSize / stepSize);
+    const ySteps = Math.round(ySize / stepSize);
 
-    switch (currentSolution.value) {
-        case 'solution1':
-            xSize = width;
-            ySize = height;
-            xSteps = Math.round(xSize / stepSize);
-            ySteps = Math.round(ySize / stepSize);
-
-            for (let i = 0; i <= xSteps; i++) {
-                lines.push({ x: i * stepSize, y: 0, points: [0, 0, 0, ySize] });
-            }
-            for (let i = 0; i <= ySteps; i++) {
-                lines.push({ x: 0, y: i * stepSize, points: [0, 0, xSize, 0] });
-            }
-            break;
-        case 'solution2':
-            xSize = fullRect.value.x2 - fullRect.value.x1;
-            ySize = fullRect.value.y2 - fullRect.value.y1;
-            xSteps = Math.round(xSize / stepSize);
-            ySteps = Math.round(ySize / stepSize);
-
-            for (let i = 0; i <= xSteps; i++) {
-                lines.push({ x: fullRect.value.x1 + i * stepSize, y: fullRect.value.y1, points: [0, 0, 0, ySize] });
-            }
-            for (let i = 0; i <= ySteps; i++) {
-                lines.push({ x: fullRect.value.x1, y: fullRect.value.y1 + i * stepSize, points: [0, 0, xSize, 0] });
-            }
-            break;
-        case 'solution3':
-            fullRectToUse = gridFullRect.value;
-            xSize = fullRectToUse.x2 - fullRectToUse.x1;
-            ySize = fullRectToUse.y2 - fullRectToUse.y1;
-            xSteps = Math.round(xSize / stepSize);
-            ySteps = Math.round(ySize / stepSize);
-
-            for (let i = 0; i <= xSteps; i++) {
-                lines.push({ x: fullRectToUse.x1 + i * stepSize, y: fullRectToUse.y1, points: [0, 0, 0, ySize] });
-            }
-            for (let i = 0; i <= ySteps; i++) {
-                lines.push({ x: fullRectToUse.x1, y: fullRectToUse.y1 + i * stepSize, points: [0, 0, xSize, 0] });
-            }
-            break;
-        case 'solution4':
-            fullRectToUse = gridFullRect.value;
-            xSize = fullRectToUse.x2 - fullRectToUse.x1;
-            ySize = fullRectToUse.y2 - fullRectToUse.y1;
-            xSteps = Math.round(xSize / stepSize);
-            ySteps = Math.round(ySize / stepSize);
-
-            for (let i = 0; i <= xSteps; i++) {
-                lines.push({ x: fullRectToUse.x1 + i * stepSize, y: fullRectToUse.y1, points: [0, 0, 0, ySize] });
-            }
-            for (let i = 0; i <= ySteps; i++) {
-                lines.push({ x: fullRectToUse.x1, y: fullRectToUse.y1 + i * stepSize, points: [0, 0, xSize, 0] });
-            }
-            break;
+    for (let i = 0; i <= xSteps; i++) {
+        lines.push({ x: gridFullRect.value.x1 + i * stepSize, y: gridFullRect.value.y1, points: [0, 0, 0, ySize] });
+    }
+    for (let i = 0; i <= ySteps; i++) {
+        lines.push({ x: gridFullRect.value.x1, y: gridFullRect.value.y1 + i * stepSize, points: [0, 0, xSize, 0] });
     }
 
     return lines;
 });
 
 const gridClip = computed(() => {
-    if (currentSolution.value === 'solution4') {
-        return {
-            x: viewRect.value.x1,
-            y: viewRect.value.y1,
-            width: viewRect.value.x2 - viewRect.value.x1,
-            height: viewRect.value.y2 - viewRect.value.y1,
-        };
-    }
-    return null;
+    return {
+        x: viewRect.value.x1,
+        y: viewRect.value.y1,
+        width: viewRect.value.x2 - viewRect.value.x1,
+        height: viewRect.value.y2 - viewRect.value.y1,
+    };
 });
 
 function unScale(val: number) {
@@ -224,39 +166,12 @@ function downloadURI(uri: string, name: string) {
     link.click();
     document.body.removeChild(link);
 }
-
-function handleSolutionChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-    currentSolution.value = target.value;
-}
 </script>
 
 <template>
     <p>Select a solution in sequence, use mouse wheel to zoom in and out</p>
     <p>Red box is the viewport (initial stage size), blue is Konva Stage.</p>
     <p>Scale: <span id="scaleDisplay">{{ scaleDisplay }}</span></p>
-    <p>
-        <input
-            id="solution1" type="radio" class="mr-1" name="solutionNo" value="solution1"
-            :checked="currentSolution === 'solution1'" @change="handleSolutionChange"
-        ><label for="solution1">Solution 1 -
-            grid on stage</label><br>
-        <input
-            id="solution2" type="radio" class="mr-1" name="solutionNo" value="solution2"
-            :checked="currentSolution === 'solution2'" @change="handleSolutionChange"
-        ><label for="solution2">Solution 2 -
-            grid on merged</label><br>
-        <input
-            id="solution3" type="radio" class="mr-1" name="solutionNo" value="solution3"
-            :checked="currentSolution === 'solution3'" @change="handleSolutionChange"
-        ><label for="solution3">Solution 3 -
-            grid on merged inc fix for dancing grid effect</label><br>
-        <input
-            id="solution4" type="radio" class="mr-1" name="solutionNo" value="solution4"
-            :checked="currentSolution === 'solution4'" @change="handleSolutionChange"
-        ><label for="solution4">Solution 4 -
-            optimised drawing via clip function</label>
-    </p>
     <p id="buttons" class="mt-2 space-x-2">
         <button class="rounded border border-gray-300 bg-gray-200 px-4 py-1 hover:bg-gray-300" @click="saveDefault">
             Save viewport image
