@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import { computed, ref } from 'vue';
+import SidePanel from '@/Components/SidePanel.vue';
 
 interface VueKonvaRef<T> {
     getNode: () => T;
@@ -15,8 +16,8 @@ const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<Konva.Layer | null>(null);
 
 const stageConfig = ref<Konva.ContainerConfig>({
-    width: window.innerWidth,
-    height: window.innerHeight - 66,
+    width: window.innerWidth - 260,
+    height: window.innerHeight - 116,
 });
 
 const plotAreaConfig = ref<Konva.GroupConfig>({
@@ -32,24 +33,43 @@ const scaleDisplay = ref(1);
 
 // Computed
 const gridWidth = computed(() => {
-    if (plotAreaConfig.value.width! < stageConfig.value.width!) {
-        return stageConfig.value.width!;
+    if (plotAreaConfig.value.width + 200 < stageConfig.value.width) {
+        console.log(plotAreaConfig.value.width + 200, stageConfig.value.width);
+        return stageConfig.value.width;
     }
-    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 100;
+    return plotAreaConfig.value.width + plotAreaConfig.value.x + 100;
 });
 
 const gridHeight = computed(() => {
-    if (plotAreaConfig.value.height! < stageConfig.value.height!) {
-        return stageConfig.value.height!;
+    if (plotAreaConfig.value.height < stageConfig.value.height) {
+        return stageConfig.value.height;
     }
-    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 100;
+    return plotAreaConfig.value.height + plotAreaConfig.value.y + 100;
+});
+
+const minX = computed(() => {
+    return Math.min(0, stageConfig.value.width! - (gridWidth.value * scaleDisplay.value));
+});
+const maxX = computed(() => {
+    return 0;
+});
+const minY = computed(() => {
+    return Math.min(0, stageConfig.value.height! - gridHeight.value);
+});
+const maxY = computed(() => {
+    return 0;
 });
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
-    const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
-    const maxX = 0;
-    const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
-    const maxY = 0;
+    // const minX = Math.min(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value);
+    // const maxX = Math.max(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value);
+    // const minY = Math.min(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value);
+    // const maxY = Math.max(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value);
+
+    // const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
+    // const maxX = 0;
+    // const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
+    // const maxY = 0;
 
     return {
         x: 0,
@@ -60,8 +80,9 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         scaleY: scaleDisplay,
         draggable: true,
         dragBoundFunc: (pos: { x: number; y: number }) => {
-            const newX = Math.max(minX, Math.min(maxX, pos.x));
-            const newY = Math.max(minY, Math.min(maxY, pos.y));
+            const newX = Math.max(minX.value, Math.min(maxX.value, pos.x));
+            const newY = Math.max(minY.value, Math.min(maxY.value, pos.y));
+            console.log(newX);
             return { x: newX, y: newY };
         },
     };
@@ -143,11 +164,14 @@ function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     axisLabelsOffsetX.value = e.target.x();
     axisLabelsOffsetY.value = e.target.y();
+
+    //     console.log(e.target.x(), e.target.y());
+//     // e.target.y(Math.max(e.target.y(), 50));
 }
 
 function resizeStage() {
-    stageConfig.value.width = window.innerWidth;
-    stageConfig.value.height = window.innerHeight;
+    stageConfig.value.width = window.innerWidth - 260;
+    stageConfig.value.height = window.innerHeight - 116;
 }
 
 function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
@@ -197,152 +221,167 @@ window.addEventListener('resize', resizeStage);
 </script>
 
 <template>
-    <div class="space-x-2">
-        <p class="space-x-4 px-2">
-            <span id="scaleDisplay">Scale: {{ scaleDisplay }}</span>
-            <span id="gridConfig">gridConfig: {{ gridConfig }}</span>
+    <div>
+        <p class="h-[50px] space-x-4 bg-gray-300 p-2 text-xs">
+            <span>Scale: {{ scaleDisplay }}</span>
+            <span>stageConfig.width: {{ stageConfig.width }}</span>
+            <span>gridWidth: {{ gridWidth }}</span>
+            <span>gridHeight: {{ gridHeight }}</span>
+            <span>minX: {{ minX }}</span>
+            <span>maxX: {{ maxX }}</span>
+            <span>minY: {{ minY }}</span>
+            <span>maxY: {{ maxY }}</span>
+            <span>gridConfigX: {{ gridConfig.x }}</span>
+            <span>gridConfigY: {{ gridConfig.y }}</span>
         </p>
-        <v-stage
-            ref="stage"
-            :key="updateKey"
-            :config="stageConfig"
-            @wheel="handleWheel"
-        >
-            <v-layer ref="background" name="background">
-                <v-group
-                    id="grid-group"
-                    ref="grid"
-                    name="grid"
-                    :config="{
-                        ...gridConfig,
-                        scaleX: scaleDisplay,
-                        scaleY: scaleDisplay,
-                    }"
-                    @dragend="handleGridDragEnd"
-                    @dragmove="handleGridDragMove"
+        <div class="flex">
+            <div>
+                <v-stage
+                    ref="stage"
+                    :key="updateKey"
+                    :config="stageConfig"
+                    @wheel="handleWheel"
                 >
-                    <v-rect
-                        name="grid-background"
-                        :config="{
-                            x: 0,
-                            y: 0,
-                            width: gridConfig.width,
-                            height: gridConfig.height,
-                            fill: '#fbb',
-                        }"
-                    />
-                    <v-rect
-                        name="plot-area"
-                        :config="plotAreaConfig"
-                    />
-                    <v-line
-                        v-for="n in Math.floor(gridConfig.height! / 10)"
-                        :key="n"
-                        name="gridLines-h"
-                        :config="{
-                            x: 0,
-                            y: n * 10,
-                            points: [0, 0, gridConfig.width, 0],
-                            stroke: 'gray',
-                            strokeWidth: (n) % 10 === 0 ? 1 : .5,
-                        }"
-                    />
-                    <v-line
-                        v-for="n in Math.floor(gridConfig.width! / 10)"
-                        :key="n"
-                        name="gridLines-v"
-                        :config="{
-                            x: n * 10,
-                            y: 0,
-                            points: [0, 0, 0, gridConfig.height],
-                            stroke: 'gray',
-                            strokeWidth: (n) % 10 === 0 ? 1 : .5,
-                        }"
-                    />
-                </v-group>
-            </v-layer>
+                    <v-layer ref="background" name="background">
+                        <v-group
+                            id="grid-group"
+                            ref="grid"
+                            name="grid"
+                            :config="{
+                                ...gridConfig,
+                                scaleX: scaleDisplay,
+                                scaleY: scaleDisplay,
+                            }"
+                            @dragend="handleGridDragEnd"
+                            @dragmove="handleGridDragMove"
+                        >
+                            <v-rect
+                                name="grid-background"
+                                :config="{
+                                    x: 0,
+                                    y: 0,
+                                    width: gridConfig.width,
+                                    height: gridConfig.height,
+                                    fill: '#fbb',
+                                }"
+                            />
+                            <v-rect
+                                name="plot-area"
+                                :config="plotAreaConfig"
+                            />
+                            <v-line
+                                v-for="n in Math.floor(gridConfig.height! / 10)"
+                                :key="n"
+                                name="gridLines-h"
+                                :config="{
+                                    x: 0,
+                                    y: n * 10,
+                                    points: [0, 0, gridConfig.width, 0],
+                                    stroke: 'gray',
+                                    strokeWidth: (n) % 10 === 0 ? 1 : .5,
+                                }"
+                            />
+                            <v-line
+                                v-for="n in Math.floor(gridConfig.width! / 10)"
+                                :key="n"
+                                name="gridLines-v"
+                                :config="{
+                                    x: n * 10,
+                                    y: 0,
+                                    points: [0, 0, 0, gridConfig.height],
+                                    stroke: 'gray',
+                                    strokeWidth: (n) % 10 === 0 ? 1 : .5,
+                                }"
+                            />
+                        </v-group>
+                    </v-layer>
 
-            <!-- New axes layer that stays fixed -->
-            <v-layer ref="axesLayer" name="axes">
-                <!-- X-axis at the top -->
-                <v-line
-                    name="x-axis"
-                    :config="{
-                        x: 0,
-                        y: 10,
-                        points: [0, 0, stageConfig.width, 0],
-                        stroke: 'black',
-                        strokeWidth: 20,
-                        opacity: 0.5,
-                    }"
-                />
-
-                <!-- Y-axis at the left -->
-                <v-line
-                    name="y-axis"
-                    :config="{
-                        x: 10,
-                        y: 0,
-                        points: [0, 0, 0, stageConfig.height],
-                        stroke: 'black',
-                        strokeWidth: 20,
-                        opacity: 0.5,
-                    }"
-                />
-
-                <!-- X-axis tick marks and labels -->
-                <v-group
-                    :config="{ x: axisLabelsOffsetX }"
-                >
-                    <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
+                    <!-- New axes layer that stays fixed -->
+                    <v-layer ref="axesLayer" name="axes">
+                        <!-- X-axis at the top -->
                         <v-line
+                            name="x-axis"
                             :config="{
-                                x: tick.x,
-                                y: 15,
-                                points: [0, 0, 0, 5],
-                                stroke: 'white',
-                                strokeWidth: 1,
+                                x: 0,
+                                y: 10,
+                                points: [0, 0, stageConfig.width, 0],
+                                stroke: 'black',
+                                strokeWidth: 20,
+                                opacity: 0.5,
                             }"
                         />
-                        <v-text
-                            :config="{
-                                x: tick.x - 7,
-                                y: 3,
-                                text: tick.text,
-                                fontSize: 10,
-                                fill: 'white',
-                                align: 'center',
-                            }"
-                        />
-                    </template>
-                </v-group>
 
-                <!-- Y-axis tick marks and labels -->
-                <v-group :config="{ y: axisLabelsOffsetY }">
-                    <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
+                        <!-- Y-axis at the left -->
                         <v-line
+                            name="y-axis"
                             :config="{
-                                x: 15,
-                                y: tick.y,
-                                points: [0, 0, 5, 0],
-                                stroke: 'white',
-                                strokeWidth: 1,
+                                x: 10,
+                                y: 0,
+                                points: [0, 0, 0, stageConfig.height],
+                                stroke: 'black',
+                                strokeWidth: 20,
+                                opacity: 0.5,
                             }"
                         />
-                        <v-text
-                            :config="{
-                                x: 3,
-                                y: tick.y + 7,
-                                text: tick.text,
-                                fontSize: 10,
-                                rotation: 270,
-                                fill: 'white',
-                                align: 'left',
-                            }"
-                        />
-                    </template>
-                </v-group>
-            </v-layer>
-        </v-stage>
+
+                        <!-- X-axis tick marks and labels -->
+                        <v-group
+                            :config="{ x: axisLabelsOffsetX }"
+                        >
+                            <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
+                                <v-line
+                                    :config="{
+                                        x: tick.x,
+                                        y: 15,
+                                        points: [0, 0, 0, 5],
+                                        stroke: 'white',
+                                        strokeWidth: 1,
+                                    }"
+                                />
+                                <v-text
+                                    :config="{
+                                        x: tick.x - 7,
+                                        y: 3,
+                                        text: tick.text,
+                                        fontSize: 10,
+                                        fill: 'white',
+                                        align: 'center',
+                                    }"
+                                />
+                            </template>
+                        </v-group>
+
+                        <!-- Y-axis tick marks and labels -->
+                        <v-group :config="{ y: axisLabelsOffsetY }">
+                            <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
+                                <v-line
+                                    :config="{
+                                        x: 15,
+                                        y: tick.y,
+                                        points: [0, 0, 5, 0],
+                                        stroke: 'white',
+                                        strokeWidth: 1,
+                                    }"
+                                />
+                                <v-text
+                                    :config="{
+                                        x: 3,
+                                        y: tick.y + 7,
+                                        text: tick.text,
+                                        fontSize: 10,
+                                        rotation: 270,
+                                        fill: 'white',
+                                        align: 'left',
+                                    }"
+                                />
+                            </template>
+                        </v-group>
+                    </v-layer>
+                </v-stage>
+            </div>
+            <div class="w-full">
+                <SidePanel />
+            </div>
+        </div>
     </div>
 </template>
