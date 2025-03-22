@@ -123,6 +123,11 @@ interface TeamInvitation {
 }
 
 // Custom types
+interface VueKonvaRef<T> {
+    getNode: () => T;
+    // Add other Vue Konva methods as needed
+}
+
 interface Chair {
     id: string;
     position: Position;
@@ -220,4 +225,17 @@ interface FlowerBed {
     strokeWidth: number;
     draggable: boolean;
     dragBoundFunc: (pos: Position) => Position;
+}
+
+interface Plot {
+    id: number;
+    user_id: number;
+    name: string;
+    width: number;
+    length: number;
+    location_lat: number;
+    location_lng: number;
+    location_name: string;
+    location_combined: string;
+    units: 'metres' | 'yards';
 }

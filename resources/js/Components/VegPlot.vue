@@ -1,60 +1,62 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
+import type { Plot, VueKonvaRef } from '@/types';
 
-interface VueKonvaRef<T> {
-    getNode: () => T;
-    // Add other Vue Konva methods as needed
-}
+const props = defineProps<{
+    plots: Plot;
+}>();
 
 // Setup reactive state
 const updateKey = ref(0);
-const stage = ref<Konva.Stage | null>(null);
+const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
-const axesLayer = ref<Konva.Layer | null>(null);
+const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
 
-const stageConfig = ref<Konva.ContainerConfig>({
+const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - 260,
     height: window.innerHeight - 116,
 });
 
-const plotAreaConfig = ref<Konva.GroupConfig>({
-    x: 100,
-    y: 100,
-    width: 1000,
-    height: 1000,
-    fill: '#eee',
-    stroke: 'black',
+const plotAreaConfig = computed<Konva.GroupConfig>(() => {
+    return {
+        x: 150,
+        y: 150,
+        width: props.plots.width * 100,
+        height: props.plots.length * 100,
+        fill: '#eee',
+        stroke: 'black',
+    };
 });
 
 const scaleDisplay = ref(1);
 
 // Computed
 const gridWidth = computed(() => {
-    if (plotAreaConfig.value.width + 200 < stageConfig.value.width) {
-        console.log(plotAreaConfig.value.width + 200, stageConfig.value.width);
+    if (plotAreaConfig.value.width! + 200 < stageConfig.value.width!) {
+        console.log(plotAreaConfig.value.width! + 200, stageConfig.value.width);
         return stageConfig.value.width;
     }
-    return plotAreaConfig.value.width + plotAreaConfig.value.x + 100;
+    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 100;
 });
 
 const gridHeight = computed(() => {
-    if (plotAreaConfig.value.height < stageConfig.value.height) {
+    if (plotAreaConfig.value.height! + 200 < stageConfig.value.height!) {
         return stageConfig.value.height;
     }
-    return plotAreaConfig.value.height + plotAreaConfig.value.y + 100;
+    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 100;
 });
 
 const minX = computed(() => {
-    return Math.min(0, stageConfig.value.width! - (gridWidth.value * scaleDisplay.value));
+    return Math.min(0, stageConfig.value.width! - (gridWidth.value! * scaleDisplay.value));
 });
 const maxX = computed(() => {
     return 0;
 });
 const minY = computed(() => {
-    return Math.min(0, stageConfig.value.height! - gridHeight.value);
+    return Math.min(0, stageConfig.value.height! - (gridHeight.value! * scaleDisplay.value));
 });
 const maxY = computed(() => {
     return 0;
@@ -76,13 +78,13 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         y: 0,
         width: gridWidth.value,
         height: gridHeight.value,
-        scaleX: scaleDisplay,
-        scaleY: scaleDisplay,
+        scaleX: scaleDisplay.value,
+        scaleY: scaleDisplay.value,
         draggable: true,
         dragBoundFunc: (pos: { x: number; y: number }) => {
             const newX = Math.max(minX.value, Math.min(maxX.value, pos.x));
             const newY = Math.max(minY.value, Math.min(maxY.value, pos.y));
-            console.log(newX);
+            console.log(newY);
             return { x: newX, y: newY };
         },
     };
@@ -177,7 +179,7 @@ function resizeStage() {
 function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     e.evt.preventDefault();
 
-    const stageNode = stage.value.getNode();
+    const stageNode = stage.value!.getNode();
     const oldScale = scaleDisplay.value;
     const pointer = stageNode?.getPointerPosition();
 
@@ -212,12 +214,12 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
 
 window.addEventListener('resize', resizeStage);
 
-// onMounted(() => {
-//     if (grid.value) {
-//         grid.value.cache();
-//         background.value?.batchDraw();
-//     }
-// });
+onMounted(() => {
+    // if (grid.value) {
+    //     grid.value.cache();
+    //     background.value?.batchDraw();
+    // }
+});
 </script>
 
 <template>
@@ -247,11 +249,7 @@ window.addEventListener('resize', resizeStage);
                             id="grid-group"
                             ref="grid"
                             name="grid"
-                            :config="{
-                                ...gridConfig,
-                                scaleX: scaleDisplay,
-                                scaleY: scaleDisplay,
-                            }"
+                            :config="gridConfig"
                             @dragend="handleGridDragEnd"
                             @dragmove="handleGridDragMove"
                         >
@@ -262,7 +260,7 @@ window.addEventListener('resize', resizeStage);
                                     y: 0,
                                     width: gridConfig.width,
                                     height: gridConfig.height,
-                                    fill: '#fbb',
+                                    fill: '#abb',
                                 }"
                             />
                             <v-rect
