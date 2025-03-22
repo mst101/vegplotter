@@ -4,9 +4,7 @@ import { computed, ref } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
 import type { Plot, VueKonvaRef } from '@/types';
 
-const props = defineProps<{
-    plots: Plot;
-}>();
+const props = defineProps<{ plots: Plot }>();
 
 // Setup reactive state
 const updateKey = ref(0);
@@ -23,15 +21,12 @@ const stageConfig = ref<Konva.StageConfig>({
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
     let x = 50;
     let y = 50;
-
-    // Center the plot area if it's smaller than the stage
     if (stageConfig.value.width! > props.plots.width * 100) {
         x = (stageConfig.value.width! - props.plots.width * 100) / 2;
     }
     if (stageConfig.value.height! > props.plots.length * 100) {
         y = (stageConfig.value.height! - props.plots.length * 100) / 2;
     }
-
     return {
         x,
         y,
@@ -44,7 +39,7 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
 
 const scaleDisplay = ref(1);
 
-// Computed
+// Computed for grid dimensions and boundaries
 const gridWidth = computed(() => {
     if (plotAreaConfig.value.width! + 100 < stageConfig.value.width!) {
         return stageConfig.value.width;
@@ -59,18 +54,10 @@ const gridHeight = computed(() => {
     return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 50;
 });
 
-const minX = computed(() => {
-    return Math.min(0, stageConfig.value.width! - (gridWidth.value! * scaleDisplay.value));
-});
-const maxX = computed(() => {
-    return 0;
-});
-const minY = computed(() => {
-    return Math.min(0, stageConfig.value.height! - (gridHeight.value! * scaleDisplay.value));
-});
-const maxY = computed(() => {
-    return 0;
-});
+const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value));
+const maxX = computed(() => 0);
+const minY = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value));
+const maxY = computed(() => 0);
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
     return {
@@ -89,21 +76,15 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
     };
 });
 
-// Axis ticks computed properties
+// Axis ticks computed
 const xAxisTicks = computed(() => {
     const ticks = [];
     const plotStartX = plotAreaConfig.value.x!;
     const plotWidth = plotAreaConfig.value.width!;
-
     const numTicks = Math.ceil(plotWidth / 100) + 1;
-
     for (let i = 0; i < numTicks; i++) {
-        ticks.push({
-            x: plotStartX + (i * 100),
-            text: `${i}m`,
-        });
+        ticks.push({ x: plotStartX + i * 100, text: `${i}m` });
     }
-
     return ticks;
 });
 
@@ -111,42 +92,18 @@ const yAxisTicks = computed(() => {
     const ticks = [];
     const plotStartY = plotAreaConfig.value.y!;
     const plotHeight = plotAreaConfig.value.height!;
-
     const numTicks = Math.ceil(plotHeight / 100) + 1;
-
     for (let i = 0; i < numTicks; i++) {
-        ticks.push({
-            y: plotStartY + (i * 100),
-            text: `${i}m`,
-        });
+        ticks.push({ y: plotStartY + i * 100, text: `${i}m` });
     }
-
     return ticks;
 });
 
 const axisLabelsOffsetX = ref(0);
 const axisLabelsOffsetY = ref(0);
 
-// scale related
-const scales = [
-    5,
-    4,
-    3,
-    2.5,
-    2,
-    1.5,
-    1,
-    0.9,
-    0.8,
-    0.7,
-    0.6,
-    0.5,
-    0.4,
-    0.3,
-    0.2,
-    0.1,
-    0.05,
-];
+// Scale related
+const scales = [5, 4, 3, 2.5, 2, 1.5, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05];
 let currentScaleIndex = 6;
 
 function unScale(val: number) {
@@ -174,48 +131,69 @@ function resizeStage() {
 
 function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     e.evt.preventDefault();
-
     const stageNode = stage.value!.getNode();
     const oldScale = scaleDisplay.value;
     const pointer = stageNode?.getPointerPosition();
-
     if (!pointer)
         return;
-
     const mousePointTo = {
         x: (pointer.x - gridConfig.value.x!) / oldScale,
         y: (pointer.y - gridConfig.value.y!) / oldScale,
     };
-
     const direction = e.evt.deltaY > 0 ? 1 : -1;
-
     if (direction > 0) {
         currentScaleIndex = currentScaleIndex > 0 ? currentScaleIndex - 1 : currentScaleIndex;
     }
     else {
         currentScaleIndex = currentScaleIndex < scales.length - 1 ? currentScaleIndex + 1 : currentScaleIndex;
     }
-
     const newScale = scales[currentScaleIndex];
-
     gridConfig.value.x = pointer.x - mousePointTo.x * newScale;
     gridConfig.value.y = pointer.y - mousePointTo.y * newScale;
-
     axisLabelsOffsetX.value = gridConfig.value.x;
     axisLabelsOffsetY.value = gridConfig.value.y;
-
     scaleDisplay.value = newScale;
     updateKey.value++;
 }
 
 window.addEventListener('resize', resizeStage);
 
-// Computed property to calculate the offset for the grid lines
-const gridOffset = computed(() => {
-    return {
-        x: plotAreaConfig.value.x! % 100,
-        y: plotAreaConfig.value.y! % 100,
-    };
+// Compute grid offset based on plot area
+const gridOffset = computed(() => ({
+    x: plotAreaConfig.value.x! % 100,
+    y: plotAreaConfig.value.y! % 100,
+}));
+
+// Compute horizontal grid lines visible within grid-group boundaries
+const horizontalGridLines = computed(() => {
+    const lines = [];
+    const offsetY = gridOffset.value.y;
+    const groupHeight = gridConfig.value.height!;
+    const start = Math.ceil((100 - offsetY) / 10);
+    const end = Math.floor((groupHeight + 100 - offsetY) / 10);
+    for (let n = start; n <= end; n++) {
+        const y = -100 + n * 10 + offsetY;
+        if (y >= 0 && y <= groupHeight) {
+            lines.push({ index: n, y, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+        }
+    }
+    return lines;
+});
+
+// Compute vertical grid lines visible within grid-group boundaries
+const verticalGridLines = computed(() => {
+    const lines = [];
+    const offsetX = gridOffset.value.x;
+    const groupWidth = gridConfig.value.width!;
+    const start = Math.ceil((100 - offsetX) / 10);
+    const end = Math.floor((groupWidth + 100 - offsetX) / 10);
+    for (let n = start; n <= end; n++) {
+        const x = -100 + n * 10 + offsetX;
+        if (x >= 0 && x <= groupWidth) {
+            lines.push({ index: n, x, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+        }
+    }
+    return lines;
 });
 </script>
 
@@ -235,12 +213,7 @@ const gridOffset = computed(() => {
         </p>
         <div class="flex">
             <div>
-                <v-stage
-                    ref="stage"
-                    :key="updateKey"
-                    :config="stageConfig"
-                    @wheel="handleWheel"
-                >
+                <v-stage ref="stage" :key="updateKey" :config="stageConfig" @wheel="handleWheel">
                     <v-layer ref="background" name="background">
                         <v-group
                             id="grid-group"
@@ -260,43 +233,41 @@ const gridOffset = computed(() => {
                                     fill: '#abb',
                                 }"
                             />
-                            <v-rect
-                                name="plot-area"
-                                :config="plotAreaConfig"
-                            />
+                            <v-rect name="plot-area" :config="plotAreaConfig" />
+
                             <!-- Horizontal grid lines -->
                             <v-line
-                                v-for="n in Math.ceil(gridConfig.height! / 10) + 10"
-                                :key="`h-${n}`"
+                                v-for="line in horizontalGridLines"
+                                :key="`h-${line.index}`"
                                 name="gridLines-h"
                                 :config="{
                                     x: 0,
-                                    y: -100 + n * 10 + gridOffset.y,
+                                    y: line.y,
                                     points: [0, 0, gridConfig.width, 0],
                                     stroke: 'gray',
-                                    strokeWidth: n % 10 === 0 ? 1 : .5,
+                                    strokeWidth: line.strokeWidth,
                                 }"
                             />
 
                             <!-- Vertical grid lines -->
                             <v-line
-                                v-for="n in Math.ceil(gridConfig.width! / 10) + 10"
-                                :key="`v-${n}`"
+                                v-for="line in verticalGridLines"
+                                :key="`v-${line.index}`"
                                 name="gridLines-v"
                                 :config="{
-                                    x: -100 + n * 10 + gridOffset.x,
+                                    x: line.x,
                                     y: 0,
                                     points: [0, 0, 0, gridConfig.height],
                                     stroke: 'gray',
-                                    strokeWidth: n % 10 === 0 ? 1 : .5,
+                                    strokeWidth: line.strokeWidth,
                                 }"
                             />
                         </v-group>
                     </v-layer>
 
-                    <!-- New axes layer that stays fixed -->
+                    <!-- Fixed axes layer -->
                     <v-layer ref="axesLayer" name="axes" :config="{ visible: false }">
-                        <!-- X-axis at the top -->
+                        <!-- X-axis -->
                         <v-line
                             name="x-axis"
                             :config="{
@@ -309,7 +280,7 @@ const gridOffset = computed(() => {
                             }"
                         />
 
-                        <!-- Y-axis at the left -->
+                        <!-- Y-axis -->
                         <v-line
                             name="y-axis"
                             :config="{
@@ -323,9 +294,7 @@ const gridOffset = computed(() => {
                         />
 
                         <!-- X-axis tick marks and labels -->
-                        <v-group
-                            :config="{ x: axisLabelsOffsetX }"
-                        >
+                        <v-group :config="{ x: axisLabelsOffsetX }">
                             <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
                                 <v-line
                                     :config="{
