@@ -12,6 +12,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
+const scaleDisplay = ref(1);
 
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - 260,
@@ -21,12 +22,25 @@ const stageConfig = ref<Konva.StageConfig>({
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
     let x = 50;
     let y = 50;
+    const plotWidthScaled = props.plots.width * 100 * scaleDisplay.value;
+    const plotHeightScaled = props.plots.length * 100 * scaleDisplay.value;
+
     if (stageConfig.value.width! > props.plots.width * 100) {
         x = (stageConfig.value.width! - props.plots.width * 100) / 2;
     }
     if (stageConfig.value.height! > props.plots.length * 100) {
         y = (stageConfig.value.height! - props.plots.length * 100) / 2;
     }
+
+    if (scaleDisplay.value < 1) {
+        if (plotWidthScaled < stageConfig.value.width!) {
+            x = (stageConfig.value.width! - plotWidthScaled) / 2 / scaleDisplay.value;
+        }
+        if (plotHeightScaled < stageConfig.value.height!) {
+            y = (stageConfig.value.height! - plotHeightScaled) / 2 / scaleDisplay.value;
+        }
+    }
+
     return {
         x,
         y,
@@ -36,8 +50,6 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
         stroke: 'black',
     };
 });
-
-const scaleDisplay = ref(1);
 
 // Computed for grid dimensions and boundaries
 const gridWidth = computed(() => {
@@ -54,9 +66,9 @@ const gridHeight = computed(() => {
     return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 50;
 });
 
-const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value));
+const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
 const maxX = computed(() => 0);
-const minY = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value));
+const minY = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value! * scaleDisplay.value));
 const maxY = computed(() => 0);
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
@@ -164,11 +176,18 @@ const gridOffset = computed(() => ({
     y: plotAreaConfig.value.y! % 100,
 }));
 
+const scaledWidth = computed(() => {
+    return scaleDisplay.value >= 1 ? gridWidth.value : unScale(gridWidth.value!);
+});
+const scaledHeight = computed(() => {
+    return scaleDisplay.value >= 1 ? gridHeight.value : unScale(gridHeight.value!);
+});
+
 // Compute horizontal grid lines visible within grid-group boundaries
 const horizontalGridLines = computed(() => {
     const lines = [];
     const offsetY = gridOffset.value.y;
-    const groupHeight = gridConfig.value.height!;
+    const groupHeight = scaledHeight.value!;
     const start = Math.ceil((100 - offsetY) / 10);
     const end = Math.floor((groupHeight + 100 - offsetY) / 10);
     for (let n = start; n <= end; n++) {
@@ -184,7 +203,7 @@ const horizontalGridLines = computed(() => {
 const verticalGridLines = computed(() => {
     const lines = [];
     const offsetX = gridOffset.value.x;
-    const groupWidth = gridConfig.value.width!;
+    const groupWidth = scaledWidth.value!;
     const start = Math.ceil((100 - offsetX) / 10);
     const end = Math.floor((groupWidth + 100 - offsetX) / 10);
     for (let n = start; n <= end; n++) {
@@ -228,8 +247,8 @@ const verticalGridLines = computed(() => {
                                 :config="{
                                     x: 0,
                                     y: 0,
-                                    width: gridConfig.width,
-                                    height: gridConfig.height,
+                                    width: scaledWidth,
+                                    height: scaledHeight,
                                     fill: '#abb',
                                 }"
                             />
@@ -243,7 +262,7 @@ const verticalGridLines = computed(() => {
                                 :config="{
                                     x: 0,
                                     y: line.y,
-                                    points: [0, 0, gridConfig.width, 0],
+                                    points: [0, 0, scaledWidth, 0],
                                     stroke: 'gray',
                                     strokeWidth: line.strokeWidth,
                                 }"
@@ -257,7 +276,7 @@ const verticalGridLines = computed(() => {
                                 :config="{
                                     x: line.x,
                                     y: 0,
-                                    points: [0, 0, 0, gridConfig.height],
+                                    points: [0, 0, 0, scaledHeight],
                                     stroke: 'gray',
                                     strokeWidth: line.strokeWidth,
                                 }"
