@@ -213,8 +213,8 @@ window.addEventListener('resize', resizeStage);
 // Computed property to calculate the offset for the grid lines
 const gridOffset = computed(() => {
     return {
-        x: (plotAreaConfig.value.x! % 100),
-        y: (plotAreaConfig.value.y! % 100),
+        x: plotAreaConfig.value.x! % 100,
+        y: plotAreaConfig.value.y! % 100,
     };
 });
 </script>
