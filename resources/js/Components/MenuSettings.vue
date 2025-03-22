@@ -40,11 +40,11 @@ function updatePlot() {
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold uppercase tracking-wide">Width:</label>
-                    <input v-model="form.width" class="w-full rounded border border-gray-300 bg-white" type="number">
+                    <input v-model="form.width" class="w-full rounded border border-gray-300 bg-white" type="number" step="any">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold uppercase tracking-wide">Length:</label>
-                    <input v-model="form.length" class="w-full rounded border border-gray-300 bg-white" type="number">
+                    <input v-model="form.length" class="w-full rounded border border-gray-300 bg-white" type="number" step="any">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-semibold uppercase tracking-wide">Location:</label>

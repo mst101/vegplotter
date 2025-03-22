@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
 import type { Plot, VueKonvaRef } from '@/types';
 
@@ -21,9 +21,20 @@ const stageConfig = ref<Konva.StageConfig>({
 });
 
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
+    let x = 100;
+    let y = 100;
+
+    // Center the plot area if it's smaller than the stage
+    if (stageConfig.value.width! > props.plots.width * 100) {
+        x = (stageConfig.value.width! - props.plots.width * 100) / 2;
+    }
+    if (stageConfig.value.height! > props.plots.length * 100) {
+        y = (stageConfig.value.height! - props.plots.length * 100) / 2;
+    }
+
     return {
-        x: 150,
-        y: 150,
+        x,
+        y,
         width: props.plots.width * 100,
         height: props.plots.length * 100,
         fill: '#eee',
@@ -36,7 +47,6 @@ const scaleDisplay = ref(1);
 // Computed
 const gridWidth = computed(() => {
     if (plotAreaConfig.value.width! + 200 < stageConfig.value.width!) {
-        console.log(plotAreaConfig.value.width! + 200, stageConfig.value.width);
         return stageConfig.value.width;
     }
     return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 100;
@@ -63,16 +73,6 @@ const maxY = computed(() => {
 });
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
-    // const minX = Math.min(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value);
-    // const maxX = Math.max(0, stageConfig.value.width! - gridWidth.value * scaleDisplay.value);
-    // const minY = Math.min(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value);
-    // const maxY = Math.max(0, stageConfig.value.height! - gridHeight.value * scaleDisplay.value);
-
-    // const minX = Math.min(0, stageConfig.value.width! - gridWidth.value);
-    // const maxX = 0;
-    // const minY = Math.min(0, stageConfig.value.height! - gridHeight.value);
-    // const maxY = 0;
-
     return {
         x: 0,
         y: 0,
@@ -84,7 +84,6 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         dragBoundFunc: (pos: { x: number; y: number }) => {
             const newX = Math.max(minX.value, Math.min(maxX.value, pos.x));
             const newY = Math.max(minY.value, Math.min(maxY.value, pos.y));
-            console.log(newY);
             return { x: newX, y: newY };
         },
     };
@@ -166,9 +165,6 @@ function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     axisLabelsOffsetX.value = e.target.x();
     axisLabelsOffsetY.value = e.target.y();
-
-    //     console.log(e.target.x(), e.target.y());
-//     // e.target.y(Math.max(e.target.y(), 50));
 }
 
 function resizeStage() {
@@ -214,11 +210,12 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
 
 window.addEventListener('resize', resizeStage);
 
-onMounted(() => {
-    // if (grid.value) {
-    //     grid.value.cache();
-    //     background.value?.batchDraw();
-    // }
+// Computed property to calculate the offset for the grid lines
+const gridOffset = computed(() => {
+    return {
+        x: (plotAreaConfig.value.x! % 100),
+        y: (plotAreaConfig.value.y! % 100),
+    };
 });
 </script>
 
@@ -273,7 +270,7 @@ onMounted(() => {
                                 name="gridLines-h"
                                 :config="{
                                     x: 0,
-                                    y: n * 10,
+                                    y: n * 10 - gridOffset.y,
                                     points: [0, 0, gridConfig.width, 0],
                                     stroke: 'gray',
                                     strokeWidth: (n) % 10 === 0 ? 1 : .5,
@@ -284,7 +281,7 @@ onMounted(() => {
                                 :key="n"
                                 name="gridLines-v"
                                 :config="{
-                                    x: n * 10,
+                                    x: n * 10 - gridOffset.x,
                                     y: 0,
                                     points: [0, 0, 0, gridConfig.height],
                                     stroke: 'gray',
