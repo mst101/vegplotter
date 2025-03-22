@@ -52,13 +52,14 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
 });
 
 // Computed for grid dimensions and boundaries
+const gridX = ref(0);
+const gridY = ref(0);
 const gridWidth = computed(() => {
     if (plotAreaConfig.value.width! + 100 < stageConfig.value.width!) {
         return stageConfig.value.width;
     }
     return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 50;
 });
-
 const gridHeight = computed(() => {
     if (plotAreaConfig.value.height! + 100 < stageConfig.value.height!) {
         return stageConfig.value.height;
@@ -73,8 +74,8 @@ const maxY = computed(() => 0);
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
     return {
-        x: 0,
-        y: 0,
+        x: gridX.value,
+        y: gridY.value,
         width: gridWidth.value,
         height: gridHeight.value,
         scaleX: scaleDisplay.value,
@@ -111,29 +112,19 @@ const yAxisTicks = computed(() => {
     return ticks;
 });
 
-const axisLabelsOffsetX = ref(0);
-const axisLabelsOffsetY = ref(0);
-
 // Scale related
 const scales = [5, 4, 3, 2.5, 2, 1.5, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05];
 let currentScaleIndex = 6;
 
+// Methods
 function unScale(val: number) {
     return val / scaleDisplay.value;
 }
 
-// Methods
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
-    axisLabelsOffsetX.value = e.target.x();
-    axisLabelsOffsetY.value = e.target.y();
-    gridConfig.value.x = e.target.x();
-    gridConfig.value.y = e.target.y();
+    gridX.value = e.target.x();
+    gridY.value = e.target.y();
     updateKey.value++;
-}
-
-function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
-    axisLabelsOffsetX.value = e.target.x();
-    axisLabelsOffsetY.value = e.target.y();
 }
 
 function resizeStage() {
@@ -148,22 +139,35 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     const pointer = stageNode?.getPointerPosition();
     if (!pointer)
         return;
+
+    // Calculate mouse position relative to the grid
     const mousePointTo = {
-        x: (pointer.x - gridConfig.value.x!) / oldScale,
-        y: (pointer.y - gridConfig.value.y!) / oldScale,
+        x: (pointer.x - gridX.value) / oldScale,
+        y: (pointer.y - gridY.value) / oldScale,
     };
+
     const direction = e.evt.deltaY > 0 ? 1 : -1;
     if (direction > 0) {
-        currentScaleIndex = currentScaleIndex > 0 ? currentScaleIndex - 1 : currentScaleIndex;
+        currentScaleIndex = Math.max(0, currentScaleIndex - 1);
     }
     else {
-        currentScaleIndex = currentScaleIndex < scales.length - 1 ? currentScaleIndex + 1 : currentScaleIndex;
+        currentScaleIndex = Math.min(scales.length - 1, currentScaleIndex + 1);
     }
+
     const newScale = scales[currentScaleIndex];
-    gridConfig.value.x = pointer.x - mousePointTo.x * newScale;
-    gridConfig.value.y = pointer.y - mousePointTo.y * newScale;
-    axisLabelsOffsetX.value = gridConfig.value.x;
-    axisLabelsOffsetY.value = gridConfig.value.y;
+
+    // Calculate new position to zoom towards the mouse pointer
+    const newX = pointer.x - mousePointTo.x * newScale;
+    const newY = pointer.y - mousePointTo.y * newScale;
+
+    // Apply constraints when zoomed out
+    const adjustedMinX = Math.min(0, stageConfig.value.width! - gridWidth.value! * newScale);
+    const adjustedMinY = Math.min(0, stageConfig.value.height! - gridHeight.value! * newScale);
+
+    // Set the grid position
+    gridX.value = Math.max(adjustedMinX, Math.min(0, newX));
+    gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
+
     scaleDisplay.value = newScale;
     updateKey.value++;
 }
@@ -240,7 +244,6 @@ const verticalGridLines = computed(() => {
                             name="grid"
                             :config="gridConfig"
                             @dragend="handleGridDragEnd"
-                            @dragmove="handleGridDragMove"
                         >
                             <v-rect
                                 name="grid-background"
@@ -313,7 +316,7 @@ const verticalGridLines = computed(() => {
                         />
 
                         <!-- X-axis tick marks and labels -->
-                        <v-group :config="{ x: axisLabelsOffsetX }">
+                        <v-group :config="{ x: gridX }">
                             <template v-for="(tick, index) in xAxisTicks" :key="`x-tick-${index}`">
                                 <v-line
                                     :config="{
@@ -338,7 +341,7 @@ const verticalGridLines = computed(() => {
                         </v-group>
 
                         <!-- Y-axis tick marks and labels -->
-                        <v-group :config="{ y: axisLabelsOffsetY }">
+                        <v-group :config="{ y: gridY }">
                             <template v-for="(tick, index) in yAxisTicks" :key="`y-tick-${index}`">
                                 <v-line
                                     :config="{
