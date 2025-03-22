@@ -21,8 +21,8 @@ const stageConfig = ref<Konva.StageConfig>({
 });
 
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
-    let x = 100;
-    let y = 100;
+    let x = 50;
+    let y = 50;
 
     // Center the plot area if it's smaller than the stage
     if (stageConfig.value.width! > props.plots.width * 100) {
@@ -46,17 +46,17 @@ const scaleDisplay = ref(1);
 
 // Computed
 const gridWidth = computed(() => {
-    if (plotAreaConfig.value.width! + 200 < stageConfig.value.width!) {
+    if (plotAreaConfig.value.width! + 100 < stageConfig.value.width!) {
         return stageConfig.value.width;
     }
-    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 100;
+    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 50;
 });
 
 const gridHeight = computed(() => {
-    if (plotAreaConfig.value.height! + 200 < stageConfig.value.height!) {
+    if (plotAreaConfig.value.height! + 100 < stageConfig.value.height!) {
         return stageConfig.value.height;
     }
-    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 100;
+    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 50;
 });
 
 const minX = computed(() => {
@@ -264,35 +264,38 @@ const gridOffset = computed(() => {
                                 name="plot-area"
                                 :config="plotAreaConfig"
                             />
+                            <!-- Horizontal grid lines -->
                             <v-line
-                                v-for="n in Math.floor(gridConfig.height! / 10)"
-                                :key="n"
+                                v-for="n in Math.ceil(gridConfig.height! / 10) + 10"
+                                :key="`h-${n}`"
                                 name="gridLines-h"
                                 :config="{
                                     x: 0,
-                                    y: n * 10 - gridOffset.y,
+                                    y: -100 + n * 10 + gridOffset.y,
                                     points: [0, 0, gridConfig.width, 0],
                                     stroke: 'gray',
-                                    strokeWidth: (n) % 10 === 0 ? 1 : .5,
+                                    strokeWidth: n % 10 === 0 ? 1 : .5,
                                 }"
                             />
+
+                            <!-- Vertical grid lines -->
                             <v-line
-                                v-for="n in Math.floor(gridConfig.width! / 10)"
-                                :key="n"
+                                v-for="n in Math.ceil(gridConfig.width! / 10) + 10"
+                                :key="`v-${n}`"
                                 name="gridLines-v"
                                 :config="{
-                                    x: n * 10 - gridOffset.x,
+                                    x: -100 + n * 10 + gridOffset.x,
                                     y: 0,
                                     points: [0, 0, 0, gridConfig.height],
                                     stroke: 'gray',
-                                    strokeWidth: (n) % 10 === 0 ? 1 : .5,
+                                    strokeWidth: n % 10 === 0 ? 1 : .5,
                                 }"
                             />
                         </v-group>
                     </v-layer>
 
                     <!-- New axes layer that stays fixed -->
-                    <v-layer ref="axesLayer" name="axes">
+                    <v-layer ref="axesLayer" name="axes" :config="{ visible: false }">
                         <!-- X-axis at the top -->
                         <v-line
                             name="x-axis"
