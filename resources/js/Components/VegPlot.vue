@@ -2,7 +2,7 @@
 import type Konva from 'konva';
 import { computed, ref, watch } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
-import type { Plot, VueKonvaRef } from '@/types';
+import type { Plot, Position, VueKonvaRef } from '@/types';
 
 const props = defineProps<{ plots: Plot }>();
 
@@ -19,6 +19,11 @@ const stageConfig = ref<Konva.StageConfig>({
 });
 const gridX = ref(0);
 const gridY = ref(0);
+const isCtrlPressed = ref(false);
+
+// Scrollbar refs
+const verticalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
+const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 const paddingX = computed(() =>
     calculatePadding(stageConfig.value.width!, props.plots.width),
@@ -96,6 +101,20 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
     };
 });
 
+const isVerticalScrollbarVisible = computed(() => gridHeight.value! * scaleDisplay.value > stageConfig.value.height!);
+const verticalScrollbarHeight = computed(() => {
+    if (!isVerticalScrollbarVisible.value)
+        return 0;
+    return Math.max(20, (stageConfig.value.height! / (gridHeight.value! * scaleDisplay.value)) * stageConfig.value.height!);
+});
+
+const isHorizontalScrollbarVisible = computed(() => gridWidth.value! * scaleDisplay.value > stageConfig.value.width!);
+const horizontalScrollbarWidth = computed(() => {
+    if (!isHorizontalScrollbarVisible.value)
+        return 0;
+    return Math.max(20, (stageConfig.value.width! / (gridWidth.value! * scaleDisplay.value)) * stageConfig.value.width!);
+});
+
 // Axis ticks computed
 const xAxisTicks = computed(() => {
     const ticks = [];
@@ -137,9 +156,14 @@ function unScale(val: number) {
     return val / scaleDisplay.value;
 }
 
-function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
+function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     gridX.value = e.target.x();
     gridY.value = e.target.y();
+    updateScrollbars();
+}
+
+function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
+    handleGridDragMove(e);
 }
 
 function resizeStage() {
@@ -148,45 +172,71 @@ function resizeStage() {
 }
 
 function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
-    e.evt.preventDefault();
-    const stageNode = stage.value!.getNode();
-    const oldScale = scaleDisplay.value;
-    const pointer = stageNode?.getPointerPosition();
-    if (!pointer)
-        return;
+    if ((isVerticalScrollbarVisible.value || isHorizontalScrollbarVisible.value) && !isCtrlPressed.value) {
+        e.evt.preventDefault();
+        const scrollAmount = e.evt.deltaY; // Adjust scroll speed as needed
 
-    // Calculate mouse position relative to the grid
-    const mousePointTo = {
-        x: (pointer.x - gridX.value) / oldScale,
-        y: (pointer.y - gridY.value) / oldScale,
-    };
-
-    const direction = e.evt.deltaY > 0 ? 1 : -1;
-    if (direction > 0) {
-        currentScaleIndex = Math.max(0, currentScaleIndex - 1);
+        if (isVerticalScrollbarVisible.value) {
+            const newY = gridY.value + scrollAmount;
+            gridY.value = Math.max(minY.value, Math.min(maxY.value, newY));
+        }
+        else if (isHorizontalScrollbarVisible.value) {
+            const newX = gridX.value + scrollAmount;
+            gridX.value = Math.max(minX.value, Math.min(maxX.value, newX));
+        }
+        updateScrollbars();
     }
     else {
-        currentScaleIndex = Math.min(scales.length - 1, currentScaleIndex + 1);
+        e.evt.preventDefault();
+        const stageNode = stage.value!.getNode();
+        const oldScale = scaleDisplay.value;
+        const pointer = stageNode?.getPointerPosition();
+        if (!pointer)
+            return;
+
+        // Calculate mouse position relative to the grid
+        const mousePointTo = {
+            x: (pointer.x - gridX.value) / oldScale,
+            y: (pointer.y - gridY.value) / oldScale,
+        };
+
+        const direction = e.evt.deltaY > 0 ? 1 : -1;
+        if (direction > 0) {
+            currentScaleIndex = Math.max(0, currentScaleIndex - 1);
+        }
+        else {
+            currentScaleIndex = Math.min(scales.length - 1, currentScaleIndex + 1);
+        }
+
+        const newScale = scales[currentScaleIndex];
+
+        // Calculate new position to zoom towards the mouse pointer
+        const newX = pointer.x - mousePointTo.x * newScale;
+        const newY = pointer.y - mousePointTo.y * newScale;
+
+        // Apply constraints when zoomed out
+        const adjustedMinX = Math.min(0, stageConfig.value.width! - gridWidth.value! * newScale);
+        const adjustedMinY = Math.min(0, stageConfig.value.height! - gridHeight.value! - newScale);
+
+        // Set the grid position
+        gridX.value = Math.max(adjustedMinX, Math.min(0, newX));
+        gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
+
+        scaleDisplay.value = newScale;
     }
-
-    const newScale = scales[currentScaleIndex];
-
-    // Calculate new position to zoom towards the mouse pointer
-    const newX = pointer.x - mousePointTo.x * newScale;
-    const newY = pointer.y - mousePointTo.y * newScale;
-
-    // Apply constraints when zoomed out
-    const adjustedMinX = Math.min(0, stageConfig.value.width! - gridWidth.value! * newScale);
-    const adjustedMinY = Math.min(0, stageConfig.value.height! - gridHeight.value! * newScale);
-
-    // Set the grid position
-    gridX.value = Math.max(adjustedMinX, Math.min(0, newX));
-    gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
-
-    scaleDisplay.value = newScale;
 }
 
 window.addEventListener('resize', resizeStage);
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Control') {
+        isCtrlPressed.value = true;
+    }
+});
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'Control') {
+        isCtrlPressed.value = false;
+    }
+});
 
 // Compute grid offset based on plot area
 const gridOffset = computed(() => ({
@@ -215,6 +265,7 @@ function updateGridPosition() {
     gridY.value = scaledPlotHeight > stageConfig.value.height!
         ? (stageConfig.value.height! - scaledPlotHeight) / 2 / scaleDisplay.value
         : Math.max(minY.value, 0);
+    updateScrollbars();
 }
 
 // Compute horizontal grid lines visible within grid-group boundaries
@@ -259,6 +310,45 @@ watch(
     updateGridPosition,
     { immediate: true },
 );
+
+// Scrollbar related
+function handleVerticalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
+    const newScrollTop = e.target.y() / (stageConfig.value.height! - verticalScrollbarHeight.value) * (gridHeight.value! * scaleDisplay.value - stageConfig.value.height!);
+    gridY.value = -newScrollTop;
+    updateGridPosition();
+}
+
+function handleVerticalScrollDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+    handleVerticalScrollDragMove(e);
+}
+
+function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
+    const newScrollLeft = e.target.x() / (stageConfig.value.width! - horizontalScrollbarWidth.value) * (gridWidth.value! * scaleDisplay.value - stageConfig.value.width!);
+    gridX.value = -newScrollLeft;
+    updateGridPosition();
+}
+
+function handleHorizontalScrollDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+    handleHorizontalScrollDragMove(e);
+}
+
+function updateScrollbars() {
+    if (verticalScrollbar.value && verticalScrollbar.value.getNode()) {
+        const scrollTop = -gridY.value;
+        const maxScrollTop = gridHeight.value! * scaleDisplay.value - stageConfig.value.height!;
+        const scrollbarY = (scrollTop / maxScrollTop) * (stageConfig.value.height! - verticalScrollbarHeight.value);
+        verticalScrollbar.value.getNode().y(Math.max(0, Math.min(stageConfig.value.height! - verticalScrollbarHeight.value, scrollbarY)));
+        verticalScrollbar.value.getNode().height(verticalScrollbarHeight.value);
+    }
+
+    if (horizontalScrollbar.value && horizontalScrollbar.value.getNode()) {
+        const scrollLeft = -gridX.value;
+        const maxScrollLeft = gridWidth.value! * scaleDisplay.value - stageConfig.value.width!;
+        const scrollbarX = (scrollLeft / maxScrollLeft) * (stageConfig.value.width! - horizontalScrollbarWidth.value);
+        horizontalScrollbar.value.getNode().x(Math.max(0, Math.min(stageConfig.value.width! - horizontalScrollbarWidth.value, scrollbarX)));
+        horizontalScrollbar.value.getNode().width(horizontalScrollbarWidth.value);
+    }
+}
 </script>
 
 <template>
@@ -284,6 +374,7 @@ watch(
                             ref="grid"
                             name="grid"
                             :config="gridConfig"
+                            @dragmove="handleGridDragMove"
                             @dragend="handleGridDragEnd"
                         >
                             <v-rect
@@ -406,6 +497,70 @@ watch(
                                 />
                             </template>
                         </v-group>
+                    </v-layer>
+
+                    <!-- Vertical Scrollbar -->
+                    <v-layer v-if="isVerticalScrollbarVisible" name="verticalScrollbarLayer">
+                        <v-rect
+                            :config="{
+                                x: stageConfig.width! - 12,
+                                y: 0,
+                                width: 12,
+                                height: stageConfig.height,
+                                fill: 'lightgreen',
+                            }"
+                        />
+                        <v-rect
+                            ref="verticalScrollbar"
+                            :config="{
+                                x: stageConfig.width! - 12,
+                                y: 0,
+                                width: 12,
+                                height: verticalScrollbarHeight,
+                                fill: 'green',
+                                draggable: true,
+                                dragBoundFunc: (pos: Position) => {
+                                    return {
+                                        x: stageConfig.width! - 12,
+                                        y: Math.max(0, Math.min(stageConfig.height! - verticalScrollbarHeight, pos.y)),
+                                    };
+                                },
+                                dragmove: handleVerticalScrollDragMove,
+                                dragend: handleVerticalScrollDragEnd,
+                            }"
+                        />
+                    </v-layer>
+
+                    <!-- Horizontal Scrollbar -->
+                    <v-layer v-if="isHorizontalScrollbarVisible" name="horizontalScrollbarLayer">
+                        <v-rect
+                            :config="{
+                                x: 0,
+                                y: stageConfig.height! - 12,
+                                width: stageConfig.width,
+                                height: 12,
+                                fill: 'lightgreen',
+                            }"
+                        />
+                        <v-rect
+                            ref="horizontalScrollbar"
+                            :config="{
+                                x: 0,
+                                y: stageConfig.height! - 12,
+                                width: horizontalScrollbarWidth,
+                                height: 12,
+                                fill: 'green',
+                                draggable: true,
+                                dragBoundFunc: (pos: Position) => {
+                                    return {
+                                        x: Math.max(0, Math.min(stageConfig.width! - horizontalScrollbarWidth, pos.x)),
+                                        y: stageConfig.height! - 12,
+                                    };
+                                },
+                                dragmove: handleHorizontalScrollDragMove,
+                                dragend: handleHorizontalScrollDragEnd,
+                            }"
+                        />
                     </v-layer>
                 </v-stage>
             </div>
