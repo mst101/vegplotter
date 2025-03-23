@@ -12,7 +12,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(1);
+const scaleDisplay = ref(0.5);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - 260,
     height: window.innerHeight - 116,
@@ -116,25 +116,51 @@ const horizontalScrollbarWidth = computed(() => {
     return Math.max(20, (stageConfig.value.width! / (gridWidth.value! * scaleDisplay.value)) * stageConfig.value.width!);
 });
 
+const verticalScrollbarY = computed(() => {
+    if (!isVerticalScrollbarVisible.value)
+        return 0;
+
+    const scrollTop = -gridY.value;
+    const maxScrollTop = gridHeight.value! * scaleDisplay.value - stageConfig.value.height!;
+    const scrollbarY = (scrollTop / maxScrollTop) * (stageConfig.value.height! - verticalScrollbarHeight.value);
+    return Math.max(0, Math.min(stageConfig.value.height! - verticalScrollbarHeight.value, scrollbarY));
+});
+
+const horizontalScrollbarX = computed(() => {
+    if (!isHorizontalScrollbarVisible.value)
+        return 0;
+
+    const scrollLeft = -gridX.value;
+    const maxScrollLeft = gridWidth.value! * scaleDisplay.value - stageConfig.value.width!;
+    const scrollbarX = (scrollLeft / maxScrollLeft) * (stageConfig.value.width! - horizontalScrollbarWidth.value);
+    return Math.max(0, Math.min(stageConfig.value.width! - horizontalScrollbarWidth.value, scrollbarX));
+});
+
 // Axis ticks computed
 const xAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartX = plotAreaConfig.value.x!;
+    const plotStartX = plotAreaConfig.value.x! * scaleDisplay.value;
     const plotWidth = plotAreaConfig.value.width!;
     const numTicks = Math.ceil(plotWidth / 100) + 1;
     for (let i = 0; i < numTicks; i++) {
-        ticks.push({ x: plotStartX + i * 100, text: `${i}m` });
+        ticks.push({
+            x: plotStartX + i * 100 * scaleDisplay.value,
+            text: `${i}m`,
+        });
     }
     return ticks;
 });
 
 const yAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartY = plotAreaConfig.value.y!;
+    const plotStartY = plotAreaConfig.value.y! * scaleDisplay.value;
     const plotHeight = plotAreaConfig.value.height!;
     const numTicks = Math.ceil(plotHeight / 100) + 1;
     for (let i = 0; i < numTicks; i++) {
-        ticks.push({ y: plotStartY + i * 100, text: `${i}m` });
+        ticks.push({
+            y: plotStartY + i * 100 * scaleDisplay.value,
+            text: `${i}m`,
+        });
     }
     return ticks;
 });
@@ -160,11 +186,6 @@ function unScale(val: number) {
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     gridX.value = e.target.x();
     gridY.value = e.target.y();
-    updateScrollbars();
-}
-
-function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
-    handleGridDragMove(e);
 }
 
 function resizeStage() {
@@ -173,9 +194,8 @@ function resizeStage() {
 }
 
 function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
-    const stageNode = stage.value!.getNode();
     const oldScale = scaleDisplay.value;
-    const pointer = stageNode?.getPointerPosition();
+    const pointer = stage.value!.getNode().getPointerPosition();
     if (!pointer)
         return;
 
@@ -199,7 +219,6 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     const newX = pointer.x - mousePointTo.x * newScale;
     const newY = pointer.y - mousePointTo.y * newScale;
 
-    // Apply constraints when zoomed out
     const adjustedMinX = Math.min(0, stageConfig.value.width! - gridWidth.value! * newScale);
     const adjustedMinY = Math.min(0, stageConfig.value.height! - gridHeight.value! * newScale);
 
@@ -207,11 +226,24 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     gridX.value = Math.max(adjustedMinX, Math.min(0, newX));
     gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
 
+    // Special case when zooming in to a scaleDisplay of 1
+    if (newScale === 1) {
+        const isWithinStageWidth = plotAreaConfig.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
+        const isWithinStageHeight = plotAreaConfig.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
+
+        if (isWithinStageWidth) {
+            gridX.value = 0;
+        }
+        if (isWithinStageHeight) {
+            gridY.value = 0;
+        }
+    }
+
     scaleDisplay.value = newScale;
 }
 
 function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
-    const scrollAmount = e.evt.deltaY; // Adjust scroll speed as needed
+    const scrollAmount = e.evt.deltaY;
 
     if (isVerticalScrollbarVisible.value) {
         const newY = gridY.value + scrollAmount;
@@ -221,7 +253,6 @@ function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
         const newX = gridX.value + scrollAmount;
         gridX.value = Math.max(minX.value, Math.min(maxX.value, newX));
     }
-    updateScrollbars();
 }
 
 function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
@@ -268,15 +299,14 @@ function updateGridPosition() {
     const scaledPlotHeight = props.plots.length * 100 * scaleDisplay.value;
 
     // Update gridX - center if plot is smaller than stage, otherwise apply constraints
-    gridX.value = scaledPlotWidth > stageConfig.value.width!
+    gridX.value = scaledPlotWidth >= stageConfig.value.width!
         ? (stageConfig.value.width! - scaledPlotWidth) / 2 / scaleDisplay.value
         : Math.max(minX.value, 0);
 
     // Update gridY - center if plot is smaller than stage, otherwise apply constraints
-    gridY.value = scaledPlotHeight > stageConfig.value.height!
+    gridY.value = scaledPlotHeight >= stageConfig.value.height!
         ? (stageConfig.value.height! - scaledPlotHeight) / 2 / scaleDisplay.value
         : Math.max(minY.value, 0);
-    updateScrollbars();
 }
 
 // Compute horizontal grid lines visible within grid-group boundaries
@@ -340,24 +370,6 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
 
     gridX.value = -newScrollLeft / scaleDisplay.value;
 }
-
-function updateScrollbars() {
-    if (verticalScrollbar.value && verticalScrollbar.value.getNode()) {
-        const scrollTop = -gridY.value;
-        const maxScrollTop = gridHeight.value! * scaleDisplay.value - stageConfig.value.height!;
-        const scrollbarY = (scrollTop / maxScrollTop) * (stageConfig.value.height! - verticalScrollbarHeight.value);
-        verticalScrollbar.value.getNode().y(Math.max(0, Math.min(stageConfig.value.height! - verticalScrollbarHeight.value, scrollbarY)));
-        verticalScrollbar.value.getNode().height(verticalScrollbarHeight.value);
-    }
-
-    if (horizontalScrollbar.value && horizontalScrollbar.value.getNode()) {
-        const scrollLeft = -gridX.value;
-        const maxScrollLeft = gridWidth.value! * scaleDisplay.value - stageConfig.value.width!;
-        const scrollbarX = (scrollLeft / maxScrollLeft) * (stageConfig.value.width! - horizontalScrollbarWidth.value);
-        horizontalScrollbar.value.getNode().x(Math.max(0, Math.min(stageConfig.value.width! - horizontalScrollbarWidth.value, scrollbarX)));
-        horizontalScrollbar.value.getNode().width(horizontalScrollbarWidth.value);
-    }
-}
 </script>
 
 <template>
@@ -384,7 +396,6 @@ function updateScrollbars() {
                             name="grid"
                             :config="gridConfig"
                             @dragmove="handleGridDragMove"
-                            @dragend="handleGridDragEnd"
                         >
                             <v-rect
                                 name="grid-background"
@@ -523,7 +534,7 @@ function updateScrollbars() {
                             ref="verticalScrollbar"
                             :config="{
                                 x: stageConfig.width! - SCROLLBAR_SIZE,
-                                y: 0,
+                                y: verticalScrollbarY,
                                 width: SCROLLBAR_SIZE,
                                 height: verticalScrollbarHeight,
                                 fill: '#aaa',
@@ -555,7 +566,7 @@ function updateScrollbars() {
                         <v-rect
                             ref="horizontalScrollbar"
                             :config="{
-                                x: 0,
+                                x: horizontalScrollbarX,
                                 y: stageConfig.height! - SCROLLBAR_SIZE,
                                 width: horizontalScrollbarWidth,
                                 height: SCROLLBAR_SIZE,
