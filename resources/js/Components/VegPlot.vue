@@ -71,18 +71,17 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
     };
 });
 
-// Computed for grid dimensions and boundaries
+// Computed
 const gridWidth = computed(() => {
-    if (plotAreaConfig.value.width! + (paddingX.value * 2) < stageConfig.value.width!) {
-        return stageConfig.value.width;
-    }
-    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + paddingX.value;
+    const plotWidth = props.plots.width * UNIT_PIXELS;
+    const totalWidth = plotWidth + paddingX.value * 2;
+    return totalWidth < stageConfig.value.width! ? stageConfig.value.width : plotWidth + plotAreaConfig.value.x! + paddingX.value;
 });
+
 const gridHeight = computed(() => {
-    if (plotAreaConfig.value.height! + (paddingY.value * 2) < stageConfig.value.height!) {
-        return stageConfig.value.height;
-    }
-    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + paddingY.value;
+    const plotHeight = props.plots.length * UNIT_PIXELS;
+    const totalHeight = plotHeight + paddingY.value * 2;
+    return totalHeight < stageConfig.value.height! ? stageConfig.value.height : plotHeight + plotAreaConfig.value.y! + paddingY.value;
 });
 
 const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
