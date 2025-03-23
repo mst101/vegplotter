@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
 import type { Plot, VueKonvaRef } from '@/types';
 
@@ -13,15 +13,24 @@ const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const scaleDisplay = ref(1);
-
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - 260,
     height: window.innerHeight - 116,
 });
+const gridX = ref(0);
+const gridY = ref(0);
+
+const paddingX = computed(() =>
+    calculatePadding(stageConfig.value.width!, props.plots.width),
+);
+
+const paddingY = computed(() =>
+    calculatePadding(stageConfig.value.height!, props.plots.length),
+);
 
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
-    let x = 50;
-    let y = 50;
+    let x = paddingX.value;
+    let y = paddingY.value;
     const plotWidthScaled = props.plots.width * 100 * scaleDisplay.value;
     const plotHeightScaled = props.plots.length * 100 * scaleDisplay.value;
 
@@ -52,19 +61,17 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
 });
 
 // Computed for grid dimensions and boundaries
-const gridX = ref(0);
-const gridY = ref(0);
 const gridWidth = computed(() => {
-    if (plotAreaConfig.value.width! + 100 < stageConfig.value.width!) {
+    if (plotAreaConfig.value.width! + (paddingX.value * 2) < stageConfig.value.width!) {
         return stageConfig.value.width;
     }
-    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + 50;
+    return plotAreaConfig.value.width! + plotAreaConfig.value.x! + paddingX.value;
 });
 const gridHeight = computed(() => {
-    if (plotAreaConfig.value.height! + 100 < stageConfig.value.height!) {
+    if (plotAreaConfig.value.height! + (paddingY.value * 2) < stageConfig.value.height!) {
         return stageConfig.value.height;
     }
-    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + 50;
+    return plotAreaConfig.value.height! + plotAreaConfig.value.y! + paddingY.value;
 });
 
 const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
@@ -117,6 +124,15 @@ const scales = [5, 4, 3, 2.5, 2, 1.5, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2,
 let currentScaleIndex = 6;
 
 // Methods
+function calculatePadding(stageSize: number, plotSize: number) {
+    const padding = (stageSize - (plotSize * 100)) / 2;
+    if (padding < -50)
+        return Math.min(50, Math.abs(padding));
+    if (padding < 0)
+        return Math.max(50, Math.abs(padding));
+    return padding;
+}
+
 function unScale(val: number) {
     return val / scaleDisplay.value;
 }
@@ -124,7 +140,6 @@ function unScale(val: number) {
 function handleGridDragEnd(e: Konva.KonvaEventObject<any>) {
     gridX.value = e.target.x();
     gridY.value = e.target.y();
-    updateKey.value++;
 }
 
 function resizeStage() {
@@ -169,7 +184,6 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
 
     scaleDisplay.value = newScale;
-    updateKey.value++;
 }
 
 window.addEventListener('resize', resizeStage);
@@ -186,6 +200,22 @@ const scaledWidth = computed(() => {
 const scaledHeight = computed(() => {
     return scaleDisplay.value >= 1 ? gridHeight.value : unScale(gridHeight.value!);
 });
+
+function updateGridPosition() {
+    // Calculate plot dimensions with current scale
+    const scaledPlotWidth = props.plots.width * 100 * scaleDisplay.value;
+    const scaledPlotHeight = props.plots.length * 100 * scaleDisplay.value;
+
+    // Update gridX - center if plot is smaller than stage, otherwise apply constraints
+    gridX.value = scaledPlotWidth > stageConfig.value.width!
+        ? (stageConfig.value.width! - scaledPlotWidth) / 2 / scaleDisplay.value
+        : Math.max(minX.value, 0);
+
+    // Update gridY - center if plot is smaller than stage, otherwise apply constraints
+    gridY.value = scaledPlotHeight > stageConfig.value.height!
+        ? (stageConfig.value.height! - scaledPlotHeight) / 2 / scaleDisplay.value
+        : Math.max(minY.value, 0);
+}
 
 // Compute horizontal grid lines visible within grid-group boundaries
 const horizontalGridLines = computed(() => {
@@ -218,6 +248,17 @@ const verticalGridLines = computed(() => {
     }
     return lines;
 });
+
+watch(
+    [
+        () => props.plots.length,
+        () => props.plots.width,
+        () => stageConfig.value.height,
+        () => stageConfig.value.width,
+    ],
+    updateGridPosition,
+    { immediate: true },
+);
 </script>
 
 <template>
