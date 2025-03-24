@@ -2,24 +2,29 @@
 import type Konva from 'konva';
 import { computed, ref, watch } from 'vue';
 import SidePanel from '@/Components/SidePanel.vue';
-import type { Plot, Position, VueKonvaRef } from '@/types';
+import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
 
-const props = defineProps<{ plots: Plot }>();
+const props = defineProps<{
+    plots: Plot;
+    config?: PlotConfig;
+}>();
 
 // Constants
-const SCROLLBAR_SIZE = 12;
-const UNIT_PIXELS = 100;
-const SIDEPANEL_WIDTH = 220;
-const VERTICAL_OFFSET = 116;
-const PADDING_PIXELS = 50;
+const SCROLLBAR_SIZE = props.config?.SCROLLBAR_SIZE || 12;
+const UNIT_PIXELS = props.config?.UNIT_PIXELS || 100;
+const SIDEPANEL_WIDTH = props.config?.SIDEPANEL_WIDTH || 220;
+const VERTICAL_OFFSET = props.config?.VERTICAL_OFFSET || 116;
+const PADDING_PIXELS = props.config?.PADDING_PIXELS || 50;
 
 // Setup reactive state
+window.innerWidth = 1024;
+window.innerHeight = 768;
 const updateKey = ref(0);
 const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(0.5);
+const scaleDisplay = ref(1);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -34,20 +39,23 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 const paddingX = computed(() => {
     // calculatePadding(stageConfig.value.width!, props.plots.width * UNIT_PIXELS, PADDING_PIXELS),
-    const stageSize = stageConfig.value.width!;
+    const stageSize = unScale(stageConfig.value.width!);
     const plotSize = props.plots.width * UNIT_PIXELS;
     const defaultPadding = PADDING_PIXELS;
-    const scaledPlotSize = plotSize * scaleDisplay.value;
-    // console.log(stageSize, scaledPlotSize, defaultPadding);
+    const fitsOnStage = plotSize <= stageSize;
 
-    if (scaledPlotSize < stageSize) {
-        const padding = unScale((stageSize - scaledPlotSize) / 2);
-        // console.log('padding', padding);
+    if (fitsOnStage) {
+        const padding = (stageSize - plotSize) / 2;
 
-        if (padding < defaultPadding) {
+        if (scaleDisplay.value >= 1) {
+            if (padding < defaultPadding) {
+                return padding;
+            }
+            return Math.min(defaultPadding, padding);
+        }
+        else {
             return padding;
         }
-        return Math.min(defaultPadding, padding);
     }
 
     return defaultPadding;
@@ -59,16 +67,20 @@ const paddingY = computed(() => {
     const stageSize = unScale(stageConfig.value.height!);
     const plotSize = props.plots.length * UNIT_PIXELS;
     const defaultPadding = PADDING_PIXELS;
-    console.log(stageSize, plotSize, defaultPadding);
+    const fitsOnStage = plotSize <= stageSize;
 
-    if (plotSize < stageSize) {
-        const padding = unScale((stageSize - plotSize) / 2);
-        console.log('padding', padding);
+    if (fitsOnStage) {
+        const padding = (stageSize - plotSize) / 2;
 
-        if (padding < defaultPadding) {
+        if (scaleDisplay.value >= 1) {
+            if (padding < defaultPadding) {
+                return padding;
+            }
+            return Math.min(defaultPadding, padding);
+        }
+        else {
             return padding;
         }
-        return Math.min(defaultPadding, padding);
     }
 
     return defaultPadding;
@@ -77,22 +89,6 @@ const paddingY = computed(() => {
 const plotAreaConfig = computed<Konva.GroupConfig>(() => {
     let x = paddingX.value;
     let y = paddingY.value;
-    // const plotWidthScaled = props.plots.width * UNIT_PIXELS * scaleDisplay.value;
-    // const plotHeightScaled = props.plots.length * UNIT_PIXELS * scaleDisplay.value;
-    //
-    // // if (stageConfig.value.width! > props.plots.width * UNIT_PIXELS) {
-    // //     x = (stageConfig.value.width! - props.plots.width * UNIT_PIXELS) / 2;
-    // // }
-    // // if (stageConfig.value.height! > props.plots.length * UNIT_PIXELS) {
-    // //     y = (stageConfig.value.height! - props.plots.length * UNIT_PIXELS) / 2;
-    // // }
-    //
-    // if (plotWidthScaled < stageConfig.value.width!) {
-    //     x = (stageConfig.value.width! - plotWidthScaled) / 2 / scaleDisplay.value;
-    // }
-    // if (plotHeightScaled < stageConfig.value.height!) {
-    //     y = (stageConfig.value.height! - plotHeightScaled) / 2 / scaleDisplay.value;
-    // }
 
     const plotWidth = props.plots.width * UNIT_PIXELS;
     const totalWidth = plotWidth + paddingX.value * 2;
@@ -102,17 +98,13 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
         x = (stageConfig.value.width! - plotWidth) / 2;
     }
 
-    x = 400;
     const plotHeight = props.plots.length * UNIT_PIXELS;
     const totalHeight = plotHeight + paddingY.value * 2;
     const fitsOnStageY = totalHeight <= stageConfig.value.height!;
 
-    console.log(fitsOnStageY, plotHeight, stageConfig.value.height!);
     if (fitsOnStageY) {
         y = (stageConfig.value.height! - plotHeight) / 2;
-        console.log(unScale(y));
     }
-    y = 300;
 
     return {
         x,
@@ -128,21 +120,33 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
 const gridWidth = computed(() => {
     const plotWidth = props.plots.width * UNIT_PIXELS;
     const totalWidth = plotWidth + paddingX.value * 2;
-    const fitsOnStage = totalWidth <= stageConfig.value.width!;
-    // console.log(fitsOnStage, plotWidth, totalWidth);
+    const fitsOnStage = totalWidth <= unScale(stageConfig.value.width!);
+
+    if (scaleDisplay.value > 1) {
+        return fitsOnStage
+            ? Math.max(totalWidth, unScale(stageConfig.value.width!))
+            : Math.min(totalWidth, stageConfig.value.width!);
+    }
+
     return fitsOnStage
         ? Math.max(totalWidth, unScale(stageConfig.value.width!))
-        : unScale(totalWidth);
+        : totalWidth;
 });
 
 const gridHeight = computed(() => {
     const plotHeight = props.plots.length * UNIT_PIXELS;
     const totalHeight = plotHeight + paddingY.value * 2;
-    const fitsOnStage = totalHeight <= stageConfig.value.height!;
-    console.log('=>', fitsOnStage, totalHeight, plotHeight);
+    const fitsOnStage = totalHeight <= unScale(stageConfig.value.height!);
+
+    if (scaleDisplay.value > 1) {
+        return fitsOnStage
+            ? Math.max(totalHeight, unScale(stageConfig.value.height!))
+            : Math.min(totalHeight, stageConfig.value.height!);
+    }
+
     return fitsOnStage
         ? Math.max(totalHeight, unScale(stageConfig.value.height!))
-        : unScale(totalHeight);
+        : totalHeight;
 });
 
 const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));

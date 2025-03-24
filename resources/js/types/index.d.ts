@@ -227,6 +227,14 @@ interface FlowerBed {
     dragBoundFunc: (pos: Position) => Position;
 }
 
+interface PlotConfig {
+    SCROLLBAR_SIZE: number;
+    UNIT_PIXELS: number;
+    SIDEPANEL_WIDTH: number;
+    VERTICAL_OFFSET: number;
+    PADDING_PIXELS: number;
+}
+
 interface Plot {
     id: number;
     user_id: number;

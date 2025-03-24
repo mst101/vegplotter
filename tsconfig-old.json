@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "jsx": "preserve",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "paths": {
+            "@/*": [
+                "./resources/js/*"
+            ],
+            "ziggy-js": [
+                "./vendor/tightenco/ziggy"
+            ]
+        },
+        "types": [
+            "@types/node"
+        ],
+        "lib": [
+            "es6",
+            "dom"
+        ],
+        "allowJs": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "skipLibCheck": true
+    },
+    "typeRoots": [
+        "./node_modules/@types",
+        "resources/js/types"
+    ],
+    "include": [
+      "resources/js/**/*.ts",
+      "resources/js/**/*.d.ts",
+      "resources/js/**/*.vue",
+      "node_modules/.pnpm/vitest@3.0.9_@types+node@22.13.10_jiti@1.21.7_yaml@2.7.0/node_modules/vitest/globals.d.ts"
+    ]
+}
