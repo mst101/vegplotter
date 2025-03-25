@@ -256,13 +256,21 @@ function resizeStage() {
 function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     const oldScale = scaleDisplay.value;
     const pointer = stage.value!.getNode().getPointerPosition();
-    if (!pointer)
-        return;
 
-    // Calculate mouse position relative to the grid
-    const mousePointTo = {
-        x: (pointer.x - gridX.value) / oldScale,
-        y: (pointer.y - gridY.value) / oldScale,
+    if (!pointer) {
+        return;
+    }
+
+    // Calculate mouse position relative to the stage
+    const mousePointToStage = {
+        x: pointer.x - stage.value!.getNode().x(),
+        y: pointer.y - stage.value!.getNode().y(),
+    };
+
+    // Calculate mouse position relative to the grid BEFORE the scale change
+    const mousePointToGridBeforeScale = {
+        x: (mousePointToStage.x - gridX.value) / oldScale,
+        y: (mousePointToStage.y - gridY.value) / oldScale,
     };
 
     const direction = e.evt.deltaY > 0 ? 1 : -1;
@@ -274,33 +282,18 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     }
 
     const newScale = scales[currentScaleIndex];
+    scaleDisplay.value = newScale;
 
-    // Calculate new position to zoom towards the mouse pointer
-    const newX = pointer.x - mousePointTo.x * newScale;
-    const newY = pointer.y - mousePointTo.y * newScale;
+    // Calculate the new grid position so that the mouse point stays in the same position relative to the stage
+    gridX.value = mousePointToStage.x - mousePointToGridBeforeScale.x * newScale;
+    gridY.value = mousePointToStage.y - mousePointToGridBeforeScale.y * newScale;
 
+    // Adjust the grid position to stay within boundaries
     const adjustedMinX = Math.min(0, stageConfig.value.width! - gridWidth.value! * newScale);
     const adjustedMinY = Math.min(0, stageConfig.value.height! - gridHeight.value! * newScale);
 
-    // Set the grid position
-    gridX.value = Math.max(adjustedMinX, Math.min(0, newX));
-    gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
-
-    // Special case when zooming in to a scaleDisplay of 1
-    // if (newScale === 1) {
-    //     const isWithinStageWidth = plotArea.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
-    //     const isWithinStageHeight = plotArea.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
-    //
-    //     if (isWithinStageWidth) {
-    //         gridX.value = 0;
-    //     }
-    //     if (isWithinStageHeight) {
-    //         gridY.value = 0;
-    //     }
-    // }
-
-    scaleDisplay.value = newScale;
-    updateGridPosition();
+    gridX.value = Math.max(adjustedMinX, Math.min(0, gridX.value));
+    gridY.value = Math.max(adjustedMinY, Math.min(0, gridY.value));
 }
 
 function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
