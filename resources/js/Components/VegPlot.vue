@@ -24,7 +24,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(2);
+const scaleDisplay = ref(1);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -141,14 +141,18 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
     };
 });
 
-const isVerticalScrollbarVisible = computed(() => gridHeight.value! * scaleDisplay.value > stageConfig.value.height!);
+const isVerticalScrollbarVisible = computed(() => {
+    return Math.floor(gridHeight.value! * scaleDisplay.value) > stageConfig.value.height!;
+});
 const verticalScrollbarHeight = computed(() => {
     if (!isVerticalScrollbarVisible.value)
         return 0;
     return Math.max(20, (stageConfig.value.height! / (gridHeight.value! * scaleDisplay.value)) * stageConfig.value.height!);
 });
 
-const isHorizontalScrollbarVisible = computed(() => gridWidth.value! * scaleDisplay.value > stageConfig.value.width!);
+const isHorizontalScrollbarVisible = computed(() => {
+    return Math.floor(gridWidth.value! * scaleDisplay.value) > stageConfig.value.width!;
+});
 const horizontalScrollbarWidth = computed(() => {
     if (!isHorizontalScrollbarVisible.value)
         return 0;
@@ -273,7 +277,12 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
         y: (mousePointToStage.y - gridY.value) / oldScale,
     };
 
-    const direction = e.evt.deltaY > 0 ? 1 : -1;
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    if (direction < 0 && fitsOnStageX.value && fitsOnStageY.value) {
+        return;
+    }
+
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
         : Math.min(scales.length - 1, currentScaleIndex + 1);
@@ -395,23 +404,32 @@ watch(
     { immediate: true },
 );
 
+// onMounted(() => {
+//     grid.value!.getNode().cache();
+// });
+
 // Scrollbar related
 function handleVerticalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
     const scrollbarY = e.target.y();
-    const scrollRatio = scrollbarY / (stageConfig.value.height! - verticalScrollbarHeight.value);
-    const maxScrollTop = gridHeight.value! * scaleDisplay.value - stageConfig.value.height!;
+    const scrollbarTrackHeight = stageConfig.value.height! - verticalScrollbarHeight.value;
+    const scrollRatio = scrollbarY / scrollbarTrackHeight;
+
+    const maxScrollTop = gridHeight.value * scaleDisplay.value - stageConfig.value.height!;
     const newScrollTop = scrollRatio * maxScrollTop;
 
-    gridY.value = -newScrollTop / scaleDisplay.value;
+    gridY.value = -newScrollTop;
 }
 
 function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
+    // debounce(horizontalScrollDrag(e), 100);
     const scrollbarX = e.target.x();
-    const scrollRatio = scrollbarX / (stageConfig.value.width! - horizontalScrollbarWidth.value);
-    const maxScrollLeft = gridWidth.value! * scaleDisplay.value - stageConfig.value.width!;
+    const scrollbarTrackWidth = stageConfig.value.width! - horizontalScrollbarWidth.value;
+    const scrollRatio = scrollbarX / scrollbarTrackWidth;
+
+    const maxScrollLeft = gridWidth.value * scaleDisplay.value - stageConfig.value.width!;
     const newScrollLeft = scrollRatio * maxScrollLeft;
 
-    gridX.value = -newScrollLeft / scaleDisplay.value;
+    gridX.value = -newScrollLeft;
 }
 </script>
 
@@ -423,7 +441,6 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
             <span>fitsOnStageX: {{ `(${fitsOnStageX}, ${fitsOnStageY})` }}</span>
             <span>padding: {{ `(${paddingX.toFixed(0)}, ${paddingY.toFixed(0)})` }}</span>
             <span>min: {{ `(${minX.toFixed(0)}, ${minY.toFixed(0)})` }}</span>
-            <!--            <span>plotAreaWidth: {{ `(${plotArea.width!.toFixed(0)}, ${plotArea.height!.toFixed(0)})` }}</span> -->
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridX!.toFixed(0)}, ${gridY!.toFixed(0)})` }}</span>
         </p>
