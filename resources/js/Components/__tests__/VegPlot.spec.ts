@@ -21,7 +21,7 @@ describe('vegPlot', () => {
         units: 'metres',
     };
 
-    const config: PlotConfig = {
+    const plotConfig: PlotConfig = {
         SCROLLBAR_SIZE: 12,
         UNIT_PIXELS: 100,
         SIDEPANEL_WIDTH: 224,
@@ -38,7 +38,7 @@ describe('vegPlot', () => {
         wrapper = shallowMount(VegPlot, {
             props: {
                 plots,
-                config,
+                plotConfig,
             },
             global: {
                 plugins: [VueKonva],
@@ -55,7 +55,7 @@ describe('vegPlot', () => {
         it('gridGroup easily fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots,
                 },
             });
@@ -69,7 +69,7 @@ describe('vegPlot', () => {
         it('gridGroup only just fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 7.8, length: 6.3 },
                 },
             });
@@ -83,19 +83,19 @@ describe('vegPlot', () => {
         it('gridGroup is too big', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 10, length: 10 },
                 },
             });
             wrapper.vm.scaleDisplay = 1;
             await nextTick();
 
-            const plotWidth = wrapper.vm.plots.width * wrapper.vm.config.UNIT_PIXELS;
-            const gridWidth = plotWidth + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotWidth = wrapper.vm.plots.width * wrapper.vm.UNIT_PIXELS;
+            const gridWidth = plotWidth + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.width).toEqual(gridWidth);
 
-            const plotHeight = wrapper.vm.plots.length * wrapper.vm.config.UNIT_PIXELS;
-            const gridHeight = plotHeight + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotHeight = wrapper.vm.plots.length * wrapper.vm.UNIT_PIXELS;
+            const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
         });
     });
@@ -104,7 +104,7 @@ describe('vegPlot', () => {
         it('gridGroup easily fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots,
                 },
             });
@@ -118,7 +118,7 @@ describe('vegPlot', () => {
         it('gridGroup only just fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 15.6, length: 12.6 },
                 },
             });
@@ -132,19 +132,19 @@ describe('vegPlot', () => {
         it('gridGroup is too big', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 20, length: 20 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
             await nextTick();
 
-            const plotWidth = wrapper.vm.plots.width * wrapper.vm.config.UNIT_PIXELS;
-            const gridWidth = plotWidth + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotWidth = wrapper.vm.plots.width * wrapper.vm.UNIT_PIXELS;
+            const gridWidth = plotWidth + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.width).toEqual(gridWidth);
 
-            const plotHeight = wrapper.vm.plots.length * wrapper.vm.config.UNIT_PIXELS;
-            const gridHeight = plotHeight + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotHeight = wrapper.vm.plots.length * wrapper.vm.UNIT_PIXELS;
+            const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
         });
     });
@@ -153,7 +153,7 @@ describe('vegPlot', () => {
         it('gridGroup easily fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 3, length: 2 },
                 },
             });
@@ -167,7 +167,7 @@ describe('vegPlot', () => {
         it('gridGroup only just fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 3.8, length: 3 },
                 },
             });
@@ -181,19 +181,19 @@ describe('vegPlot', () => {
         it('gridGroup is too big', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
-                    config,
+                    plotConfig,
                     plots: { ...plots, width: 6, length: 5 },
                 },
             });
             wrapper.vm.scaleDisplay = 2;
             await nextTick();
 
-            const plotWidth = wrapper.vm.plots.width * wrapper.vm.config.UNIT_PIXELS;
-            const gridWidth = plotWidth + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotWidth = wrapper.vm.plots.width * wrapper.vm.UNIT_PIXELS;
+            const gridWidth = plotWidth + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.width).toEqual(gridWidth);
 
-            const plotHeight = wrapper.vm.plots.length * wrapper.vm.config.UNIT_PIXELS;
-            const gridHeight = plotHeight + (wrapper.vm.config.PADDING_PIXELS * 2);
+            const plotHeight = wrapper.vm.plots.length * wrapper.vm.UNIT_PIXELS;
+            const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
         });
     });

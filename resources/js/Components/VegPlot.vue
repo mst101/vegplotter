@@ -6,19 +6,19 @@ import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
 
 const props = defineProps<{
     plots: Plot;
-    config?: PlotConfig;
+    plotConfig?: PlotConfig;
 }>();
 
 // Constants
-const SCROLLBAR_SIZE = props.config?.SCROLLBAR_SIZE || 12;
-const UNIT_PIXELS = props.config?.UNIT_PIXELS || 100;
-const SIDEPANEL_WIDTH = props.config?.SIDEPANEL_WIDTH || 220;
-const VERTICAL_OFFSET = props.config?.VERTICAL_OFFSET || 116;
-const PADDING_PIXELS = props.config?.PADDING_PIXELS || 50;
-
-// Setup reactive state
+const SCROLLBAR_SIZE = props.plotConfig?.SCROLLBAR_SIZE || 12;
+const UNIT_PIXELS = props.plotConfig?.UNIT_PIXELS || 100;
+const SIDEPANEL_WIDTH = props.plotConfig?.SIDEPANEL_WIDTH || 220;
+const VERTICAL_OFFSET = props.plotConfig?.VERTICAL_OFFSET || 116;
+const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 50;
 window.innerWidth = 1024;
 window.innerHeight = 768;
+
+// Setup reactive state
 const updateKey = ref(0);
 const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
@@ -32,8 +32,6 @@ const stageConfig = ref<Konva.StageConfig>({
 const gridX = ref(0);
 const gridY = ref(0);
 const isCtrlPressed = ref(false);
-
-// Scrollbar refs
 const verticalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
@@ -42,9 +40,9 @@ const paddingX = computed(() => {
     const stageSize = unScale(stageConfig.value.width!);
     const plotSize = props.plots.width * UNIT_PIXELS;
     const defaultPadding = PADDING_PIXELS;
-    const fitsOnStage = plotSize <= stageSize;
+    const fitsOnStageX = plotSize <= stageSize;
 
-    if (fitsOnStage) {
+    if (fitsOnStageX) {
         const padding = (stageSize - plotSize) / 2;
 
         if (scaleDisplay.value >= 1) {
@@ -67,9 +65,9 @@ const paddingY = computed(() => {
     const stageSize = unScale(stageConfig.value.height!);
     const plotSize = props.plots.length * UNIT_PIXELS;
     const defaultPadding = PADDING_PIXELS;
-    const fitsOnStage = plotSize <= stageSize;
+    const fitsOnStageY = plotSize <= stageSize;
 
-    if (fitsOnStage) {
+    if (fitsOnStageY) {
         const padding = (stageSize - plotSize) / 2;
 
         if (scaleDisplay.value >= 1) {
@@ -86,7 +84,7 @@ const paddingY = computed(() => {
     return defaultPadding;
 });
 
-const plotAreaConfig = computed<Konva.GroupConfig>(() => {
+const plotConfig = computed<Konva.GroupConfig>(() => {
     let x = paddingX.value;
     let y = paddingY.value;
 
@@ -118,34 +116,36 @@ const plotAreaConfig = computed<Konva.GroupConfig>(() => {
 
 // Computed
 const gridWidth = computed(() => {
-    const plotWidth = props.plots.width * UNIT_PIXELS;
+    const stageWidth = stageConfig.value.width!;
+    const plotWidth = plotConfig.value.width!;
     const totalWidth = plotWidth + paddingX.value * 2;
-    const fitsOnStage = totalWidth <= unScale(stageConfig.value.width!);
+    const fitsOnStageX = totalWidth <= unScale(stageWidth);
 
     if (scaleDisplay.value > 1) {
-        return fitsOnStage
-            ? Math.max(totalWidth, unScale(stageConfig.value.width!))
-            : Math.min(totalWidth, stageConfig.value.width!);
+        return fitsOnStageX
+            ? Math.max(totalWidth, unScale(stageWidth))
+            : Math.min(totalWidth, stageWidth);
     }
 
-    return fitsOnStage
-        ? Math.max(totalWidth, unScale(stageConfig.value.width!))
+    return fitsOnStageX
+        ? Math.max(totalWidth, unScale(stageWidth))
         : totalWidth;
 });
 
 const gridHeight = computed(() => {
-    const plotHeight = props.plots.length * UNIT_PIXELS;
+    const stageHeight = stageConfig.value.height!;
+    const plotHeight = plotConfig.value.height!;
     const totalHeight = plotHeight + paddingY.value * 2;
-    const fitsOnStage = totalHeight <= unScale(stageConfig.value.height!);
+    const fitsOnStageY = totalHeight <= unScale(stageHeight);
 
     if (scaleDisplay.value > 1) {
-        return fitsOnStage
-            ? Math.max(totalHeight, unScale(stageConfig.value.height!))
-            : Math.min(totalHeight, stageConfig.value.height!);
+        return fitsOnStageY
+            ? Math.max(totalHeight, unScale(stageHeight))
+            : Math.min(totalHeight, stageHeight);
     }
 
-    return fitsOnStage
-        ? Math.max(totalHeight, unScale(stageConfig.value.height!))
+    return fitsOnStageY
+        ? Math.max(totalHeight, unScale(stageHeight))
         : totalHeight;
 });
 
@@ -206,9 +206,10 @@ const horizontalScrollbarX = computed(() => {
 // Axis ticks computed
 const xAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartX = plotAreaConfig.value.x! * scaleDisplay.value;
-    const plotWidth = plotAreaConfig.value.width!;
+    const plotStartX = plotConfig.value.x! * scaleDisplay.value;
+    const plotWidth = plotConfig.value.width!;
     const numTicks = Math.ceil(plotWidth / UNIT_PIXELS) + 1;
+
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
             x: plotStartX + i * UNIT_PIXELS * scaleDisplay.value,
@@ -220,9 +221,10 @@ const xAxisTicks = computed(() => {
 
 const yAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartY = plotAreaConfig.value.y! * scaleDisplay.value;
-    const plotHeight = plotAreaConfig.value.height!;
+    const plotStartY = plotConfig.value.y! * scaleDisplay.value;
+    const plotHeight = plotConfig.value.height!;
     const numTicks = Math.ceil(plotHeight / UNIT_PIXELS) + 1;
+
     for (let i = 0; i < numTicks; i++) {
         ticks.push({
             y: plotStartY + i * UNIT_PIXELS * scaleDisplay.value,
@@ -314,8 +316,8 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
 
     // Special case when zooming in to a scaleDisplay of 1
     if (newScale === 1) {
-        const isWithinStageWidth = plotAreaConfig.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
-        const isWithinStageHeight = plotAreaConfig.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
+        const isWithinStageWidth = plotConfig.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
+        const isWithinStageHeight = plotConfig.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
 
         if (isWithinStageWidth) {
             gridX.value = 0;
@@ -329,7 +331,7 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
 }
 
 function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
-    const scrollAmount = e.evt.deltaY;
+    const scrollAmount = -e.evt.deltaY;
 
     if (isVerticalScrollbarVisible.value) {
         const newY = gridY.value + scrollAmount;
@@ -366,12 +368,6 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-// Compute grid offset based on plot area
-const gridOffset = computed(() => ({
-    x: plotAreaConfig.value.x! % UNIT_PIXELS,
-    y: plotAreaConfig.value.y! % UNIT_PIXELS,
-}));
-
 const scaledWidth = computed(() => {
     return scaleDisplay.value >= 1 ? gridWidth.value : unScale(gridWidth.value!);
 });
@@ -384,7 +380,6 @@ function updateGridPosition() {
     gridX.value = isHorizontalScrollbarVisible.value
         ? Math.max(minX.value, 0)
         : 0;
-    // gridX.value = 0;
 
     // Center if plot is smaller than stage, otherwise align to top
     gridY.value = isVerticalScrollbarVisible.value
@@ -395,10 +390,11 @@ function updateGridPosition() {
 // Compute horizontal grid lines visible within grid-group boundaries
 const horizontalGridLines = computed(() => {
     const lines = [];
-    const offsetY = gridOffset.value.y;
+    const offsetY = plotConfig.value.y! % UNIT_PIXELS;
     const groupHeight = scaledHeight.value!;
     const start = Math.ceil((UNIT_PIXELS - offsetY) / 10);
     const end = Math.floor((groupHeight + UNIT_PIXELS - offsetY) / 10);
+
     for (let n = start; n <= end; n++) {
         const y = -UNIT_PIXELS + n * 10 + offsetY;
         if (y >= 0 && y <= groupHeight) {
@@ -411,10 +407,11 @@ const horizontalGridLines = computed(() => {
 // Compute vertical grid lines visible within grid-group boundaries
 const verticalGridLines = computed(() => {
     const lines = [];
-    const offsetX = gridOffset.value.x;
+    const offsetX = plotConfig.value.x! % UNIT_PIXELS;
     const groupWidth = scaledWidth.value!;
     const start = Math.ceil((UNIT_PIXELS - offsetX) / 10);
     const end = Math.floor((groupWidth + UNIT_PIXELS - offsetX) / 10);
+
     for (let n = start; n <= end; n++) {
         const x = -UNIT_PIXELS + n * 10 + offsetX;
         if (x >= 0 && x <= groupWidth) {
@@ -461,8 +458,8 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
             <span>Scale: {{ scaleDisplay }}</span>
             <span>stage: {{ `(${stageConfig.width}, ${stageConfig.height})` }}</span>
             <span>padding: {{ `(${paddingX}, ${paddingY})` }}</span>
-            <span>plotAreaWidth: {{ `(${plotAreaConfig.width!.toFixed(0)}, ${plotAreaConfig.height!.toFixed(0)})` }}</span>
-            <span>plotAreaXY: {{ `(${plotAreaConfig.x!.toFixed(0)}, ${plotAreaConfig.y!.toFixed(0)})` }}</span>
+            <span>plotAreaWidth: {{ `(${plotConfig.width!.toFixed(0)}, ${plotConfig.height!.toFixed(0)})` }}</span>
+            <span>plotAreaXY: {{ `(${plotConfig.x!.toFixed(0)}, ${plotConfig.y!.toFixed(0)})` }}</span>
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridConfig.x!.toFixed(0)}, ${gridConfig.y!.toFixed(0)})` }}</span>
         </p>
@@ -487,7 +484,7 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
                                     fill: '#abb',
                                 }"
                             />
-                            <v-rect name="plot-area" :config="plotAreaConfig" />
+                            <v-rect name="plot-area" :config="plotConfig" />
 
                             <!-- Horizontal grid lines -->
                             <v-line

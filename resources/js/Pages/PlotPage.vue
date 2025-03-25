@@ -3,7 +3,7 @@ import { provide } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
 import VegPlot from '@/Components/VegPlot.vue';
-import type { Plot, PlotConfig } from '@/types';
+import type { Plot } from '@/types';
 
 defineOptions({
     layout: AppLayout,
@@ -11,7 +11,6 @@ defineOptions({
 
 const props = defineProps<{
     plots: Plot;
-    config?: PlotConfig;
 }>();
 
 provide('plots', props.plots);
@@ -21,7 +20,7 @@ provide('plots', props.plots);
     <PageContainer title="Plot" :show-footer="false">
         <VegPlot
             :plots="props.plots"
-            :config="{
+            :plot-config="{
                 SCROLLBAR_SIZE: 12,
                 UNIT_PIXELS: 100,
                 SIDEPANEL_WIDTH: 224,
