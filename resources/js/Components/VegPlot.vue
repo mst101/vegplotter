@@ -35,53 +35,59 @@ const isCtrlPressed = ref(false);
 const verticalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
-const paddingX = computed(() => {
-    // calculatePadding(stageConfig.value.width!, props.plots.width * UNIT_PIXELS, PADDING_PIXELS),
-    const stageSize = unScale(stageConfig.value.width!);
-    const plotSize = props.plots.width * UNIT_PIXELS;
-    const defaultPadding = PADDING_PIXELS;
-    const fitsOnStageX = plotSize <= stageSize;
+// Computed properties
+const fitsOnStageX = computed(() => {
+    const stageWidth = unScale(stageConfig.value.width!);
+    const plotWidth = props.plots.width * UNIT_PIXELS;
+    return plotWidth <= stageWidth;
+});
 
-    if (fitsOnStageX) {
-        const padding = (stageSize - plotSize) / 2;
+const fitsOnStageY = computed(() => {
+    const stageHeight = unScale(stageConfig.value.height!);
+    const plotHeight = props.plots.length * UNIT_PIXELS;
+    return plotHeight <= stageHeight;
+});
+
+const paddingX = computed(() => {
+    const stageSize = unScale(stageConfig.value.width!);
+    const plotWidth = props.plots.width * UNIT_PIXELS;
+
+    if (fitsOnStageX.value) {
+        const padding = (stageSize - plotWidth) / 2;
 
         if (scaleDisplay.value >= 1) {
-            if (padding < defaultPadding) {
+            if (padding < PADDING_PIXELS) {
                 return padding;
             }
-            return Math.min(defaultPadding, padding);
+            return Math.min(PADDING_PIXELS, padding);
         }
         else {
             return padding;
         }
     }
 
-    return defaultPadding;
+    return PADDING_PIXELS;
 });
 
 const paddingY = computed(() => {
-    // calculatePadding(stageConfig.value.height!, props.plots.length * UNIT_PIXELS, PADDING_PIXELS),
-
     const stageSize = unScale(stageConfig.value.height!);
     const plotSize = props.plots.length * UNIT_PIXELS;
-    const defaultPadding = PADDING_PIXELS;
-    const fitsOnStageY = plotSize <= stageSize;
 
-    if (fitsOnStageY) {
+    if (fitsOnStageY.value) {
         const padding = (stageSize - plotSize) / 2;
 
         if (scaleDisplay.value >= 1) {
-            if (padding < defaultPadding) {
+            if (padding < PADDING_PIXELS) {
                 return padding;
             }
-            return Math.min(defaultPadding, padding);
+            return Math.min(PADDING_PIXELS, padding);
         }
         else {
             return padding;
         }
     }
 
-    return defaultPadding;
+    return PADDING_PIXELS;
 });
 
 const plotConfig = computed<Konva.GroupConfig>(() => {
@@ -89,45 +95,39 @@ const plotConfig = computed<Konva.GroupConfig>(() => {
     let y = paddingY.value;
 
     const plotWidth = props.plots.width * UNIT_PIXELS;
-    const totalWidth = plotWidth + paddingX.value * 2;
-    const fitsOnStageX = totalWidth <= stageConfig.value.width!;
 
-    if (fitsOnStageX) {
+    if (fitsOnStageX.value) {
         x = (stageConfig.value.width! - plotWidth) / 2;
     }
 
     const plotHeight = props.plots.length * UNIT_PIXELS;
-    const totalHeight = plotHeight + paddingY.value * 2;
-    const fitsOnStageY = totalHeight <= stageConfig.value.height!;
 
-    if (fitsOnStageY) {
+    if (fitsOnStageY.value) {
         y = (stageConfig.value.height! - plotHeight) / 2;
     }
 
     return {
         x,
         y,
-        width: props.plots.width * UNIT_PIXELS,
-        height: props.plots.length * UNIT_PIXELS,
+        width: plotWidth,
+        height: plotHeight,
         fill: '#eee',
         stroke: 'black',
     };
 });
 
-// Computed
 const gridWidth = computed(() => {
     const stageWidth = stageConfig.value.width!;
     const plotWidth = plotConfig.value.width!;
     const totalWidth = plotWidth + paddingX.value * 2;
-    const fitsOnStageX = totalWidth <= unScale(stageWidth);
 
     if (scaleDisplay.value > 1) {
-        return fitsOnStageX
+        return fitsOnStageX.value
             ? Math.max(totalWidth, unScale(stageWidth))
             : Math.min(totalWidth, stageWidth);
     }
 
-    return fitsOnStageX
+    return fitsOnStageX.value
         ? Math.max(totalWidth, unScale(stageWidth))
         : totalWidth;
 });
@@ -136,15 +136,14 @@ const gridHeight = computed(() => {
     const stageHeight = stageConfig.value.height!;
     const plotHeight = plotConfig.value.height!;
     const totalHeight = plotHeight + paddingY.value * 2;
-    const fitsOnStageY = totalHeight <= unScale(stageHeight);
 
     if (scaleDisplay.value > 1) {
-        return fitsOnStageY
+        return fitsOnStageY.value
             ? Math.max(totalHeight, unScale(stageHeight))
             : Math.min(totalHeight, stageHeight);
     }
 
-    return fitsOnStageY
+    return fitsOnStageY.value
         ? Math.max(totalHeight, unScale(stageHeight))
         : totalHeight;
 });
