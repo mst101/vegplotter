@@ -24,7 +24,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(0.5);
+const scaleDisplay = ref(2);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -55,11 +55,11 @@ const paddingX = computed(() => {
     if (fitsOnStageX.value) {
         const padding = (stageSize - plotWidth) / 2;
 
-        if (scaleDisplay.value >= 1) {
+        if (scaleDisplay.value > 1) {
             if (padding < PADDING_PIXELS) {
                 return padding;
             }
-            return Math.min(PADDING_PIXELS, padding);
+            return Math.max(PADDING_PIXELS, padding);
         }
         else {
             return padding;
@@ -76,11 +76,11 @@ const paddingY = computed(() => {
     if (fitsOnStageY.value) {
         const padding = (stageSize - plotSize) / 2;
 
-        if (scaleDisplay.value >= 1) {
+        if (scaleDisplay.value > 1) {
             if (padding < PADDING_PIXELS) {
                 return padding;
             }
-            return Math.min(PADDING_PIXELS, padding);
+            return Math.max(PADDING_PIXELS, padding);
         }
         else {
             return padding;
@@ -91,26 +91,27 @@ const paddingY = computed(() => {
 });
 
 const plotArea = computed<Konva.GroupConfig>(() => {
-    let x = paddingX.value;
-    let y = paddingY.value;
+    // const x = paddingX.value;
+    // let y = paddingY.value;
 
-    const plotWidth = props.plots.width * UNIT_PIXELS;
+    // const plotWidth = props.plots.width * UNIT_PIXELS;
+    // const stageWidth = stageConfig.value.width!;
 
-    if (fitsOnStageX.value) {
-        x = (stageConfig.value.width! - plotWidth) / 2;
-    }
+    // if (fitsOnStageX.value) {
+    //     x = (stageWidth - plotWidth) / 2;
+    // }
 
-    const plotHeight = props.plots.length * UNIT_PIXELS;
+    // const plotHeight = props.plots.length * UNIT_PIXELS;
 
-    if (fitsOnStageY.value) {
-        y = (stageConfig.value.height! - plotHeight) / 2;
-    }
+    // if (fitsOnStageY.value) {
+    //     y = (stageConfig.value.height! - plotHeight) / 2;
+    // }
 
     return {
-        x,
-        y,
-        width: plotWidth,
-        height: plotHeight,
+        x: paddingX.value,
+        y: paddingY.value,
+        width: props.plots.width * UNIT_PIXELS,
+        height: props.plots.length * UNIT_PIXELS,
         fill: '#eee',
         stroke: 'black',
     };

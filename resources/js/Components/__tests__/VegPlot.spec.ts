@@ -190,7 +190,7 @@ describe('vegPlot', () => {
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
         });
 
-        it.only('plotArea position: easily fits on stage', async () => {
+        it('plotArea position: easily fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
@@ -200,29 +200,29 @@ describe('vegPlot', () => {
             wrapper.vm.scaleDisplay = 0.5;
             await nextTick();
 
-            expect(wrapper.vm.plotArea.x).toEqual(100);
-            expect(wrapper.vm.plotArea.y).toEqual(75);
+            expect(wrapper.vm.plotArea.x).toEqual(500);
+            expect(wrapper.vm.plotArea.y).toEqual(400);
         });
 
         it('plotArea position: only just fits on stage', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 7.8, length: 6.3 },
+                    plots: { ...plots, width: 15.6, length: 12.6 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
             await nextTick();
 
-            expect(wrapper.vm.plotArea.x).toEqual(10);
-            expect(wrapper.vm.plotArea.y).toEqual(10);
+            expect(wrapper.vm.plotArea.x).toEqual(20);
+            expect(wrapper.vm.plotArea.y).toEqual(20);
         });
 
         it('plotArea position: is too big', async () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 10, length: 10 },
+                    plots: { ...plots, width: 20, length: 20 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
@@ -279,6 +279,48 @@ describe('vegPlot', () => {
             const plotHeight = wrapper.vm.plots.length * wrapper.vm.UNIT_PIXELS;
             const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
+        });
+
+        it('plotArea position: easily fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 2, length: 2 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(100);
+            expect(wrapper.vm.plotArea.y).toEqual(62.5);
+        });
+
+        it('plotArea position: only just fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 3.8, length: 3 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(10);
+            expect(wrapper.vm.plotArea.y).toEqual(12.5);
+        });
+
+        it('plotArea position: is too big', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 6, length: 5 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(wrapper.vm.PADDING_PIXELS);
+            expect(wrapper.vm.plotArea.y).toEqual(wrapper.vm.PADDING_PIXELS);
         });
     });
 });
