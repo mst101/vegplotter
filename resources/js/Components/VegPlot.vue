@@ -24,7 +24,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(1);
+const scaleDisplay = ref(2);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -37,13 +37,13 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 // Computed properties
 const fitsOnStageX = computed(() => {
-    const stageWidth = unScale(stageConfig.value.width!) - SCROLLBAR_SIZE;
+    const stageWidth = unScale(stageConfig.value.width!); // - SCROLLBAR_SIZE;
     const plotWidth = props.plots.width * UNIT_PIXELS;
     return plotWidth <= stageWidth;
 });
 
 const fitsOnStageY = computed(() => {
-    const stageHeight = unScale(stageConfig.value.height!) - SCROLLBAR_SIZE;
+    const stageHeight = unScale(stageConfig.value.height!); // - SCROLLBAR_SIZE;
     const plotHeight = props.plots.length * UNIT_PIXELS;
     return plotHeight <= stageHeight;
 });
@@ -106,12 +106,6 @@ const gridWidth = computed(() => {
     const plotWidth = plotArea.value.width!;
     const totalWidth = plotWidth + paddingX.value * 2;
 
-    if (scaleDisplay.value > 1) {
-        return fitsOnStageX.value
-            ? Math.max(totalWidth, unScale(stageWidth))
-            : Math.min(totalWidth, stageWidth);
-    }
-
     return fitsOnStageX.value
         ? Math.max(totalWidth, unScale(stageWidth))
         : totalWidth;
@@ -121,12 +115,6 @@ const gridHeight = computed(() => {
     const stageHeight = stageConfig.value.height!;
     const plotHeight = plotArea.value.height!;
     const totalHeight = plotHeight + paddingY.value * 2;
-
-    if (scaleDisplay.value > 1) {
-        return fitsOnStageY.value
-            ? Math.max(totalHeight, unScale(stageHeight))
-            : Math.min(totalHeight, stageHeight);
-    }
 
     return fitsOnStageY.value
         ? Math.max(totalHeight, unScale(stageHeight))
@@ -299,19 +287,20 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     gridY.value = Math.max(adjustedMinY, Math.min(0, newY));
 
     // Special case when zooming in to a scaleDisplay of 1
-    if (newScale === 1) {
-        const isWithinStageWidth = plotArea.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
-        const isWithinStageHeight = plotArea.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
-
-        if (isWithinStageWidth) {
-            gridX.value = 0;
-        }
-        if (isWithinStageHeight) {
-            gridY.value = 0;
-        }
-    }
+    // if (newScale === 1) {
+    //     const isWithinStageWidth = plotArea.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
+    //     const isWithinStageHeight = plotArea.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
+    //
+    //     if (isWithinStageWidth) {
+    //         gridX.value = 0;
+    //     }
+    //     if (isWithinStageHeight) {
+    //         gridY.value = 0;
+    //     }
+    // }
 
     scaleDisplay.value = newScale;
+    updateGridPosition();
 }
 
 function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
@@ -443,9 +432,10 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
             <span>stage: {{ `(${stageConfig.width}, ${stageConfig.height})` }}</span>
             <span>fitsOnStageX: {{ `(${fitsOnStageX}, ${fitsOnStageY})` }}</span>
             <span>padding: {{ `(${paddingX.toFixed(0)}, ${paddingY.toFixed(0)})` }}</span>
+            <span>min: {{ `(${minX.toFixed(0)}, ${minY.toFixed(0)})` }}</span>
             <!--            <span>plotAreaWidth: {{ `(${plotArea.width!.toFixed(0)}, ${plotArea.height!.toFixed(0)})` }}</span> -->
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
-            <span>gridConfigXY: {{ `(${gridConfig.x!.toFixed(0)}, ${gridConfig.y!.toFixed(0)})` }}</span>
+            <span>gridConfigXY: {{ `(${gridX!.toFixed(0)}, ${gridY!.toFixed(0)})` }}</span>
         </p>
         <div class="flex">
             <div>
