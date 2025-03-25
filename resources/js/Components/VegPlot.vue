@@ -24,7 +24,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(1);
+const scaleDisplay = ref(0.5);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -90,7 +90,7 @@ const paddingY = computed(() => {
     return PADDING_PIXELS;
 });
 
-const plotConfig = computed<Konva.GroupConfig>(() => {
+const plotArea = computed<Konva.GroupConfig>(() => {
     let x = paddingX.value;
     let y = paddingY.value;
 
@@ -118,7 +118,7 @@ const plotConfig = computed<Konva.GroupConfig>(() => {
 
 const gridWidth = computed(() => {
     const stageWidth = stageConfig.value.width!;
-    const plotWidth = plotConfig.value.width!;
+    const plotWidth = plotArea.value.width!;
     const totalWidth = plotWidth + paddingX.value * 2;
 
     if (scaleDisplay.value > 1) {
@@ -134,7 +134,7 @@ const gridWidth = computed(() => {
 
 const gridHeight = computed(() => {
     const stageHeight = stageConfig.value.height!;
-    const plotHeight = plotConfig.value.height!;
+    const plotHeight = plotArea.value.height!;
     const totalHeight = plotHeight + paddingY.value * 2;
 
     if (scaleDisplay.value > 1) {
@@ -205,8 +205,8 @@ const horizontalScrollbarX = computed(() => {
 // Axis ticks computed
 const xAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartX = plotConfig.value.x! * scaleDisplay.value;
-    const plotWidth = plotConfig.value.width!;
+    const plotStartX = plotArea.value.x! * scaleDisplay.value;
+    const plotWidth = plotArea.value.width!;
     const numTicks = Math.ceil(plotWidth / UNIT_PIXELS) + 1;
 
     for (let i = 0; i < numTicks; i++) {
@@ -220,8 +220,8 @@ const xAxisTicks = computed(() => {
 
 const yAxisTicks = computed(() => {
     const ticks = [];
-    const plotStartY = plotConfig.value.y! * scaleDisplay.value;
-    const plotHeight = plotConfig.value.height!;
+    const plotStartY = plotArea.value.y! * scaleDisplay.value;
+    const plotHeight = plotArea.value.height!;
     const numTicks = Math.ceil(plotHeight / UNIT_PIXELS) + 1;
 
     for (let i = 0; i < numTicks; i++) {
@@ -315,8 +315,8 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
 
     // Special case when zooming in to a scaleDisplay of 1
     if (newScale === 1) {
-        const isWithinStageWidth = plotConfig.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
-        const isWithinStageHeight = plotConfig.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
+        const isWithinStageWidth = plotArea.value.width! + (paddingX.value * 2) <= stageConfig.value.width!;
+        const isWithinStageHeight = plotArea.value.height! + (paddingY.value * 2) <= stageConfig.value.height!;
 
         if (isWithinStageWidth) {
             gridX.value = 0;
@@ -389,7 +389,7 @@ function updateGridPosition() {
 // Compute horizontal grid lines visible within grid-group boundaries
 const horizontalGridLines = computed(() => {
     const lines = [];
-    const offsetY = plotConfig.value.y! % UNIT_PIXELS;
+    const offsetY = plotArea.value.y! % UNIT_PIXELS;
     const groupHeight = scaledHeight.value!;
     const start = Math.ceil((UNIT_PIXELS - offsetY) / 10);
     const end = Math.floor((groupHeight + UNIT_PIXELS - offsetY) / 10);
@@ -406,7 +406,7 @@ const horizontalGridLines = computed(() => {
 // Compute vertical grid lines visible within grid-group boundaries
 const verticalGridLines = computed(() => {
     const lines = [];
-    const offsetX = plotConfig.value.x! % UNIT_PIXELS;
+    const offsetX = plotArea.value.x! % UNIT_PIXELS;
     const groupWidth = scaledWidth.value!;
     const start = Math.ceil((UNIT_PIXELS - offsetX) / 10);
     const end = Math.floor((groupWidth + UNIT_PIXELS - offsetX) / 10);
@@ -457,8 +457,8 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
             <span>Scale: {{ scaleDisplay }}</span>
             <span>stage: {{ `(${stageConfig.width}, ${stageConfig.height})` }}</span>
             <span>padding: {{ `(${paddingX}, ${paddingY})` }}</span>
-            <span>plotAreaWidth: {{ `(${plotConfig.width!.toFixed(0)}, ${plotConfig.height!.toFixed(0)})` }}</span>
-            <span>plotAreaXY: {{ `(${plotConfig.x!.toFixed(0)}, ${plotConfig.y!.toFixed(0)})` }}</span>
+            <span>plotAreaWidth: {{ `(${plotArea.width!.toFixed(0)}, ${plotArea.height!.toFixed(0)})` }}</span>
+            <span>plotAreaXY: {{ `(${plotArea.x!.toFixed(0)}, ${plotArea.y!.toFixed(0)})` }}</span>
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridConfig.x!.toFixed(0)}, ${gridConfig.y!.toFixed(0)})` }}</span>
         </p>
@@ -483,7 +483,7 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
                                     fill: '#abb',
                                 }"
                             />
-                            <v-rect name="plot-area" :config="plotConfig" />
+                            <v-rect name="plot-area" :config="plotArea" />
 
                             <!-- Horizontal grid lines -->
                             <v-line

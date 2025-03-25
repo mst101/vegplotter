@@ -56,7 +56,7 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots,
+                    plots: { ...plots, width: 6, length: 5 },
                 },
             });
             wrapper.vm.scaleDisplay = 1;
@@ -98,6 +98,48 @@ describe('vegPlot', () => {
             const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
         });
+
+        it('plotArea position: easily fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 6, length: 5 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(100);
+            expect(wrapper.vm.plotArea.y).toEqual(75);
+        });
+
+        it('plotArea position: only just fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 7.8, length: 6.3 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(10);
+            expect(wrapper.vm.plotArea.y).toEqual(10);
+        });
+
+        it('plotArea position: is too big', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 10, length: 10 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(wrapper.vm.PADDING_PIXELS);
+            expect(wrapper.vm.plotArea.y).toEqual(wrapper.vm.PADDING_PIXELS);
+        });
     });
 
     describe('scaleDisplay=0.5', () => {
@@ -105,7 +147,7 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots,
+                    plots: { ...plots, width: 6, length: 5 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
@@ -146,6 +188,48 @@ describe('vegPlot', () => {
             const plotHeight = wrapper.vm.plots.length * wrapper.vm.UNIT_PIXELS;
             const gridHeight = plotHeight + (wrapper.vm.PADDING_PIXELS * 2);
             expect(wrapper.vm.gridConfig.height).toEqual(gridHeight);
+        });
+
+        it.only('plotArea position: easily fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 6, length: 5 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(100);
+            expect(wrapper.vm.plotArea.y).toEqual(75);
+        });
+
+        it('plotArea position: only just fits on stage', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 7.8, length: 6.3 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(10);
+            expect(wrapper.vm.plotArea.y).toEqual(10);
+        });
+
+        it('plotArea position: is too big', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 10, length: 10 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+
+            expect(wrapper.vm.plotArea.x).toEqual(wrapper.vm.PADDING_PIXELS);
+            expect(wrapper.vm.plotArea.y).toEqual(wrapper.vm.PADDING_PIXELS);
         });
     });
 
