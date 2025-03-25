@@ -274,12 +274,9 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     };
 
     const direction = e.evt.deltaY > 0 ? 1 : -1;
-    if (direction > 0) {
-        currentScaleIndex = Math.max(0, currentScaleIndex - 1);
-    }
-    else {
-        currentScaleIndex = Math.min(scales.length - 1, currentScaleIndex + 1);
-    }
+    currentScaleIndex = direction > 0
+        ? Math.max(0, currentScaleIndex - 1)
+        : Math.min(scales.length - 1, currentScaleIndex + 1);
 
     const newScale = scales[currentScaleIndex];
     scaleDisplay.value = newScale;
