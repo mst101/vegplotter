@@ -24,7 +24,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(2);
+const scaleDisplay = ref(1);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -37,13 +37,13 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 // Computed properties
 const fitsOnStageX = computed(() => {
-    const stageWidth = unScale(stageConfig.value.width!);
+    const stageWidth = unScale(stageConfig.value.width!) - SCROLLBAR_SIZE;
     const plotWidth = props.plots.width * UNIT_PIXELS;
     return plotWidth <= stageWidth;
 });
 
 const fitsOnStageY = computed(() => {
-    const stageHeight = unScale(stageConfig.value.height!);
+    const stageHeight = unScale(stageConfig.value.height!) - SCROLLBAR_SIZE;
     const plotHeight = props.plots.length * UNIT_PIXELS;
     return plotHeight <= stageHeight;
 });
@@ -91,22 +91,6 @@ const paddingY = computed(() => {
 });
 
 const plotArea = computed<Konva.GroupConfig>(() => {
-    // const x = paddingX.value;
-    // let y = paddingY.value;
-
-    // const plotWidth = props.plots.width * UNIT_PIXELS;
-    // const stageWidth = stageConfig.value.width!;
-
-    // if (fitsOnStageX.value) {
-    //     x = (stageWidth - plotWidth) / 2;
-    // }
-
-    // const plotHeight = props.plots.length * UNIT_PIXELS;
-
-    // if (fitsOnStageY.value) {
-    //     y = (stageConfig.value.height! - plotHeight) / 2;
-    // }
-
     return {
         x: paddingX.value,
         y: paddingY.value,
@@ -457,9 +441,9 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
         <p class="h-[50px] space-x-2 bg-gray-300 p-2 text-xs">
             <span>Scale: {{ scaleDisplay }}</span>
             <span>stage: {{ `(${stageConfig.width}, ${stageConfig.height})` }}</span>
-            <span>padding: {{ `(${paddingX}, ${paddingY})` }}</span>
-            <span>plotAreaWidth: {{ `(${plotArea.width!.toFixed(0)}, ${plotArea.height!.toFixed(0)})` }}</span>
-            <span>plotAreaXY: {{ `(${plotArea.x!.toFixed(0)}, ${plotArea.y!.toFixed(0)})` }}</span>
+            <span>fitsOnStageX: {{ `(${fitsOnStageX}, ${fitsOnStageY})` }}</span>
+            <span>padding: {{ `(${paddingX.toFixed(0)}, ${paddingY.toFixed(0)})` }}</span>
+            <!--            <span>plotAreaWidth: {{ `(${plotArea.width!.toFixed(0)}, ${plotArea.height!.toFixed(0)})` }}</span> -->
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridConfig.x!.toFixed(0)}, ${gridConfig.y!.toFixed(0)})` }}</span>
         </p>
