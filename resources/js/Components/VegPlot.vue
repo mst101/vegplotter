@@ -359,38 +359,84 @@ function updateGridPosition() {
         : 0;
 }
 
-// Compute horizontal grid lines visible within grid-group boundaries
-const horizontalGridLines = computed(() => {
-    const lines = [];
-    const offsetY = plotArea.value.y! % UNIT_PIXELS;
-    const groupHeight = scaledHeight.value!;
-    const start = Math.ceil((UNIT_PIXELS - offsetY) / 10);
-    const end = Math.floor((groupHeight + UNIT_PIXELS - offsetY) / 10);
+// // Compute horizontal grid lines visible within grid-group boundaries
+// const horizontalGridLines = computed(() => {
+//     const lines = [];
+//     const offsetY = plotArea.value.y! % UNIT_PIXELS;
+//     const groupHeight = scaledHeight.value!;
+//     const start = Math.ceil((UNIT_PIXELS - offsetY) / 10);
+//     const end = Math.floor((groupHeight + UNIT_PIXELS - offsetY) / 10);
+//
+//     for (let n = start; n <= end; n++) {
+//         const y = -UNIT_PIXELS + n * 10 + offsetY;
+//         if (y >= 0 && y <= groupHeight) {
+//             lines.push({ index: n, y, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+//         }
+//     }
+//     return lines;
+// });
+//
+// // Compute vertical grid lines visible within grid-group boundaries
+// const verticalGridLines = computed(() => {
+//     const lines = [];
+//     const offsetX = plotArea.value.x! % UNIT_PIXELS;
+//     const groupWidth = scaledWidth.value!;
+//     const start = Math.ceil((UNIT_PIXELS - offsetX) / 10);
+//     const end = Math.floor((groupWidth + UNIT_PIXELS - offsetX) / 10);
+//
+//     for (let n = start; n <= end; n++) {
+//         const x = -UNIT_PIXELS + n * 10 + offsetX;
+//         if (x >= 0 && x <= groupWidth) {
+//             lines.push({ index: n, x, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+//         }
+//     }
+//     return lines;
+// });
 
-    for (let n = start; n <= end; n++) {
-        const y = -UNIT_PIXELS + n * 10 + offsetY;
-        if (y >= 0 && y <= groupHeight) {
-            lines.push({ index: n, y, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+// Combine Horizontal Grid Lines into a Single Path
+const horizontalGridPath = computed(() => {
+    let path = '';
+    const plotStartY = plotArea.value.y! * scaleDisplay.value;
+    const plotHeight = plotArea.value.height! * scaleDisplay.value;
+    const numLines = Math.ceil(plotHeight / UNIT_PIXELS) + 1;
+    const offsetY = plotStartY % UNIT_PIXELS;
+    console.log(plotStartY, plotHeight, numLines, offsetY);
+
+    for (let i = 0; i < numLines; i++) {
+        const y = plotStartY + i * UNIT_PIXELS - offsetY;
+        if (y >= 0 && y <= gridHeight.value) {
+            path += `M 0 ${y} L ${gridWidth.value} ${y} `;
         }
     }
-    return lines;
+
+    return {
+        data: path,
+        stroke: 'gray',
+        strokeWidth: 0.5,
+    };
 });
 
-// Compute vertical grid lines visible within grid-group boundaries
-const verticalGridLines = computed(() => {
-    const lines = [];
-    const offsetX = plotArea.value.x! % UNIT_PIXELS;
-    const groupWidth = scaledWidth.value!;
-    const start = Math.ceil((UNIT_PIXELS - offsetX) / 10);
-    const end = Math.floor((groupWidth + UNIT_PIXELS - offsetX) / 10);
+// Combine Vertical Grid Lines into a Single Path
+const verticalGridPath = computed(() => {
+    let path = '';
+    const plotStartX = plotArea.value.x! * scaleDisplay.value;
+    const plotWidth = plotArea.value.width! * scaleDisplay.value;
+    const numLines = Math.ceil(plotWidth / UNIT_PIXELS) + 1;
+    const offsetX = plotStartX % UNIT_PIXELS;
 
-    for (let n = start; n <= end; n++) {
-        const x = -UNIT_PIXELS + n * 10 + offsetX;
-        if (x >= 0 && x <= groupWidth) {
-            lines.push({ index: n, x, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
+    for (let i = 0; i < numLines; i++) {
+        const x = plotStartX + i * UNIT_PIXELS - offsetX;
+        if (x >= 0 && x <= gridWidth.value) {
+            path += `M ${x} 0 L ${x} ${gridHeight.value} `;
         }
     }
-    return lines;
+
+    return {
+        data: path,
+        stroke: 'gray',
+        strokeWidth: 0.5,
+        visible: false,
+    };
 });
 
 watch(
@@ -467,33 +513,43 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
                             />
                             <v-rect name="plot-area" :config="plotArea" />
 
-                            <!-- Horizontal grid lines -->
-                            <v-line
-                                v-for="line in horizontalGridLines"
-                                :key="`h-${line.index}`"
-                                name="gridLines-h"
-                                :config="{
-                                    x: 0,
-                                    y: line.y,
-                                    points: [0, 0, scaledWidth, 0],
-                                    stroke: 'gray',
-                                    strokeWidth: line.strokeWidth,
-                                }"
+                            <!-- Combined Horizontal Grid Lines -->
+                            <v-path
+                                :config="horizontalGridPath"
                             />
 
-                            <!-- Vertical grid lines -->
-                            <v-line
-                                v-for="line in verticalGridLines"
-                                :key="`v-${line.index}`"
-                                name="gridLines-v"
-                                :config="{
-                                    x: line.x,
-                                    y: 0,
-                                    points: [0, 0, 0, scaledHeight],
-                                    stroke: 'gray',
-                                    strokeWidth: line.strokeWidth,
-                                }"
+                            <!-- Combined Vertical Grid Lines -->
+                            <v-path
+                                :config="verticalGridPath"
                             />
+
+                            <!--                            &lt;!&ndash; Horizontal grid lines &ndash;&gt; -->
+                            <!--                            <v-line -->
+                            <!--                                v-for="line in horizontalGridLines" -->
+                            <!--                                :key="`h-${line.index}`" -->
+                            <!--                                name="gridLines-h" -->
+                            <!--                                :config="{ -->
+                            <!--                                    x: 0, -->
+                            <!--                                    y: line.y, -->
+                            <!--                                    points: [0, 0, scaledWidth, 0], -->
+                            <!--                                    stroke: 'gray', -->
+                            <!--                                    strokeWidth: line.strokeWidth, -->
+                            <!--                                }" -->
+                            <!--                            /> -->
+
+                            <!--                            &lt;!&ndash; Vertical grid lines &ndash;&gt; -->
+                            <!--                            <v-line -->
+                            <!--                                v-for="line in verticalGridLines" -->
+                            <!--                                :key="`v-${line.index}`" -->
+                            <!--                                name="gridLines-v" -->
+                            <!--                                :config="{ -->
+                            <!--                                    x: line.x, -->
+                            <!--                                    y: 0, -->
+                            <!--                                    points: [0, 0, 0, scaledHeight], -->
+                            <!--                                    stroke: 'gray', -->
+                            <!--                                    strokeWidth: line.strokeWidth, -->
+                            <!--                                }" -->
+                            <!--                            /> -->
                         </v-group>
                     </v-layer>
 
