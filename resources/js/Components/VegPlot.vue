@@ -25,7 +25,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(2);
+const scaleDisplay = ref(1);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -213,7 +213,7 @@ const yAxisTicks = computed(() => {
 
 // Scale related
 const scales = [5, 4, 3, 2.5, 2, 1.5, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05];
-let currentScaleIndex = 6;
+let currentScaleIndex = scales.indexOf(scaleDisplay.value);
 
 // Methods
 // function calculatePadding(stageSize: number, plotSize: number) {
@@ -397,7 +397,7 @@ function updateGridPosition() {
 // });
 
 // Combine Horizontal Grid Lines into a Single Path covering the entire grid-group
-const horizontalGridPath = computed(() => {
+const horizontalGridPathMajor = computed(() => {
     let path = '';
     const startY = paddingY.value % UNIT_PIXELS;
     const numLines = Math.ceil(gridHeight.value / UNIT_PIXELS);
@@ -414,8 +414,25 @@ const horizontalGridPath = computed(() => {
     };
 });
 
+const horizontalGridPathMinor = computed(() => {
+    let path = '';
+    const startY = paddingY.value % (UNIT_PIXELS / 10);
+    const numLines = Math.ceil(gridHeight.value / UNIT_PIXELS) * 10;
+
+    for (let i = 0; i < numLines; i++) {
+        const y = startY + (i * UNIT_PIXELS) / 10;
+        path += `M 0 ${y} L ${gridWidth.value} ${y} \n`;
+    }
+
+    return {
+        data: path,
+        stroke: 'gray',
+        strokeWidth: 0.2,
+    };
+});
+
 // Combine Vertical Grid Lines into a Single Path covering the entire grid-group
-const verticalGridPath = computed(() => {
+const verticalGridPathMajor = computed(() => {
     let path = '';
     const startX = paddingX.value % UNIT_PIXELS;
     const numLines = Math.ceil(gridWidth.value / UNIT_PIXELS);
@@ -429,6 +446,23 @@ const verticalGridPath = computed(() => {
         data: path,
         stroke: 'gray',
         strokeWidth: 0.5,
+    };
+});
+
+const verticalGridPathMinor = computed(() => {
+    let path = '';
+    const startX = paddingX.value % (UNIT_PIXELS / 10);
+    const numLines = Math.ceil(gridWidth.value / UNIT_PIXELS) * 10;
+
+    for (let i = 0; i < numLines; i++) {
+        const x = startX + (i * UNIT_PIXELS) / 10;
+        path += `M ${x} 0 L ${x} ${gridHeight.value} `;
+    }
+
+    return {
+        data: path,
+        stroke: 'gray',
+        strokeWidth: 0.2,
     };
 });
 
@@ -503,14 +537,12 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
                             <v-rect name="plot-area" :config="plotArea" />
 
                             <!-- Combined Horizontal Grid Lines -->
-                            <v-path
-                                :config="horizontalGridPath"
-                            />
+                            <v-path :config="horizontalGridPathMinor" />
+                            <v-path :config="horizontalGridPathMajor" />
 
                             <!-- Combined Vertical Grid Lines -->
-                            <v-path
-                                :config="verticalGridPath"
-                            />
+                            <v-path :config="verticalGridPathMinor" />
+                            <v-path :config="verticalGridPathMajor" />
 
                             <!--                            &lt;!&ndash; Horizontal grid lines &ndash;&gt; -->
                             <!--                            <v-line -->
