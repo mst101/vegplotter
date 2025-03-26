@@ -2,7 +2,7 @@
 import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
 import type Konva from 'konva';
 import SidePanel from '@/Components/SidePanel.vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Props {
     plots: Plot;
@@ -228,11 +228,6 @@ function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
     gridY.value = e.target.y();
 }
 
-function resizeStage() {
-    stageConfig.value.width = window.innerWidth - SIDEPANEL_WIDTH;
-    stageConfig.value.height = window.innerHeight - VERTICAL_OFFSET;
-}
-
 function zoom(e: Konva.KonvaEventObject<TouchEvent | WheelEvent>, zoomFactor?: number) {
     const oldScale = scaleDisplay.value;
     const pointer = stage.value!.getNode().getPointerPosition();
@@ -311,18 +306,6 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
         scroll(e);
     }
 }
-
-window.addEventListener('resize', resizeStage);
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'Control') {
-        isCtrlPressed.value = true;
-    }
-});
-window.addEventListener('keyup', (e) => {
-    if (e.key === 'Control') {
-        isCtrlPressed.value = false;
-    }
-});
 
 const scaledWidth = computed(() => {
     return scaleDisplay.value >= 1 ? gridWidth.value : unScale(gridWidth.value!);
@@ -483,6 +466,35 @@ function getDistance(touches: TouchList) {
         + (touch2.clientY - touch1.clientY) ** 2,
     );
 }
+
+function resizeStage() {
+    stageConfig.value.width = window.innerWidth - SIDEPANEL_WIDTH;
+    stageConfig.value.height = window.innerHeight - VERTICAL_OFFSET;
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Control') {
+        isCtrlPressed.value = true;
+    }
+}
+
+function handleKeyUp(e: KeyboardEvent) {
+    if (e.key === 'Control') {
+        isCtrlPressed.value = false;
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('resize', resizeStage);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', resizeStage);
+    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('keyup', handleKeyUp);
+});
 </script>
 
 <template>
