@@ -229,7 +229,7 @@ function resizeStage() {
     stageConfig.value.height = window.innerHeight - VERTICAL_OFFSET;
 }
 
-function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
+function zoom(e: Konva.KonvaEventObject<WheelEvent>, zoomFactor?: number) {
     const oldScale = scaleDisplay.value;
     const pointer = stage.value!.getNode().getPointerPosition();
 
@@ -249,7 +249,7 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
         y: (mousePointToStage.y - gridY.value) / oldScale,
     };
 
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
+    const direction = e ? (e.evt.deltaY > 0 ? -1 : 1) : (zoomFactor! > 1 ? 1 : -1);
 
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
@@ -430,6 +430,51 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
 
     gridX.value = -newScrollLeft;
 }
+
+// Pinch zoom related
+let lastDist = 0;
+
+function handleTouchStart(e: Konva.KonvaEventObject<TouchEvent>) {
+    if (e.evt.touches.length >= 2) {
+        lastDist = getDistance(e.evt.touches);
+    }
+}
+
+function handleTouchMove(e: Konva.KonvaEventObject<TouchEvent>) {
+    if (e.evt.touches.length >= 2) {
+        e.evt.preventDefault();
+        const dist = getDistance(e.evt.touches);
+
+        if (lastDist === 0) {
+            lastDist = dist;
+        }
+
+        const zoomFactor = dist / lastDist;
+        zoom(null, zoomFactor); // Call zoom function with zoomFactor
+        lastDist = dist;
+    }
+}
+
+function handleTouchEnd() {
+    lastDist = 0;
+}
+
+function getDistance(touches: TouchList) {
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+        (touch2.clientX - touch1.clientX) ** 2
+        + (touch2.clientY - touch1.clientY) ** 2,
+    );
+}
+
+// onMounted(() => {
+//     if (stage.value && stage.value.getNode()) {
+//         stage.value.getNode().addEventListener('touchstart', handleTouchStart);
+//         stage.value.getNode().addEventListener('touchmove', handleTouchMove);
+//         stage.value.getNode().addEventListener('touchend', handleTouchEnd);
+//     }
+// });
 </script>
 
 <template>
@@ -445,7 +490,15 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
         </p>
         <div class="flex">
             <div>
-                <v-stage ref="stage" :key="updateKey" :config="stageConfig" @wheel="handleWheel">
+                <v-stage
+                    ref="stage"
+                    :key="updateKey"
+                    :config="stageConfig"
+                    @wheel="handleWheel"
+                    @touchstart="handleTouchStart"
+                    @touchstartend="handleTouchEnd"
+                    @touchmove="handleTouchMove"
+                >
                     <v-layer ref="background" name="background">
                         <v-group
                             id="grid-group"
