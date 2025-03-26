@@ -229,7 +229,7 @@ function resizeStage() {
     stageConfig.value.height = window.innerHeight - VERTICAL_OFFSET;
 }
 
-function zoom(e: Konva.KonvaEventObject<WheelEvent>, zoomFactor?: number) {
+function zoom(e: Konva.KonvaEventObject<TouchEvent | WheelEvent>, zoomFactor?: number) {
     const oldScale = scaleDisplay.value;
     const pointer = stage.value!.getNode().getPointerPosition();
 
@@ -249,7 +249,13 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>, zoomFactor?: number) {
         y: (mousePointToStage.y - gridY.value) / oldScale,
     };
 
-    const direction = e ? (e.evt.deltaY > 0 ? -1 : 1) : (zoomFactor! > 1 ? 1 : -1);
+    let direction;
+    if (e && e.evt instanceof WheelEvent) {
+        direction = (e.evt.deltaY > 0 ? -1 : 1);
+    }
+    else {
+        direction = (zoomFactor! > 1 ? 1 : -1);
+    }
 
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
@@ -270,16 +276,18 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>, zoomFactor?: number) {
     gridY.value = Math.max(adjustedMinY, Math.min(0, gridY.value));
 }
 
-function scrollVertically(e: Konva.KonvaEventObject<WheelEvent>) {
-    const scrollAmount = -e.evt.deltaY;
+function scroll(e: Konva.KonvaEventObject<WheelEvent>) {
+    const scrollAmountX = -e.evt.deltaX;
+    const scrollAmountY = -e.evt.deltaY;
+
+    if (isHorizontalScrollbarVisible.value) {
+        const newX = gridX.value + scrollAmountX;
+        gridX.value = Math.max(minX.value, Math.min(0, newX));
+    }
 
     if (isVerticalScrollbarVisible.value) {
-        const newY = gridY.value + scrollAmount;
+        const newY = gridY.value + scrollAmountY;
         gridY.value = Math.max(minY.value, Math.min(0, newY));
-    }
-    else if (isHorizontalScrollbarVisible.value) {
-        const newX = gridX.value + scrollAmount;
-        gridX.value = Math.max(minX.value, Math.min(0, newX));
     }
 }
 
@@ -291,8 +299,8 @@ function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
         return;
     }
 
-    if (isVerticalScrollbarVisible.value) {
-        scrollVertically(e);
+    if (isHorizontalScrollbarVisible.value || isVerticalScrollbarVisible.value) {
+        scroll(e);
     }
 }
 
@@ -450,7 +458,7 @@ function handleTouchMove(e: Konva.KonvaEventObject<TouchEvent>) {
         }
 
         const zoomFactor = dist / lastDist;
-        zoom(null, zoomFactor); // Call zoom function with zoomFactor
+        zoom(e, zoomFactor); // Call zoom function with zoomFactor
         lastDist = dist;
     }
 }
@@ -467,14 +475,6 @@ function getDistance(touches: TouchList) {
         + (touch2.clientY - touch1.clientY) ** 2,
     );
 }
-
-// onMounted(() => {
-//     if (stage.value && stage.value.getNode()) {
-//         stage.value.getNode().addEventListener('touchstart', handleTouchStart);
-//         stage.value.getNode().addEventListener('touchmove', handleTouchMove);
-//         stage.value.getNode().addEventListener('touchend', handleTouchEnd);
-//     }
-// });
 </script>
 
 <template>
@@ -496,8 +496,8 @@ function getDistance(touches: TouchList) {
                     :config="stageConfig"
                     @wheel="handleWheel"
                     @touchstart="handleTouchStart"
-                    @touchstartend="handleTouchEnd"
                     @touchmove="handleTouchMove"
+                    @touchend="handleTouchEnd"
                 >
                     <v-layer ref="background" name="background">
                         <v-group
