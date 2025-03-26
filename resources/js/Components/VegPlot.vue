@@ -433,7 +433,7 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
 
 onMounted(() => {
     setTimeout(() => {
-        simulateDrag();
+        simulateDragFrames();
     }, 1000);
 });
 
@@ -459,6 +459,32 @@ function simulateDrag() {
         gridX.value += stepSize;
         currentStep++;
     }, interval);
+}
+
+function simulateDragFrames() {
+    if (!grid.value || !stage.value)
+        return;
+
+    const startX = gridX.value;
+    const endX = minX.value; // Drag to the extreme left
+
+    const duration = 2000; // 2 seconds
+    const startTime = performance.now();
+
+    function animate(currentTime: number) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1); // Ensure progress doesn't exceed 1
+
+        // Linear interpolation for smooth dragging
+        const newX = startX + (endX - startX) * progress;
+        gridX.value = newX;
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    }
+
+    requestAnimationFrame(animate);
 }
 </script>
 
