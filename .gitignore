@@ -5,6 +5,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/tests/coverage
+/tests/Javascript/coverage
 /vendor
 .env
 .env.backup
@@ -22,4 +24,4 @@ yarn-error.log
 /.vscode
 /.zed
 up.sh
-tests/coverage
+

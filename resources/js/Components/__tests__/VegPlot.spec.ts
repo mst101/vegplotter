@@ -323,4 +323,114 @@ describe('vegPlot', () => {
             expect(wrapper.vm.plotArea.y).toEqual(wrapper.vm.PADDING_PIXELS);
         });
     });
+
+    describe('fitsOnStageX', () => {
+        it('plotWidth < stageWidth at scale 1', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 5 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth === stageWidth at scale 1', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 7 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth > stageWidth at scale 1', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 8 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 1;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(false);
+        });
+
+        it('plotWidth < stageWidth at scale 0.5', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 10 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth === stageWidth at scale 0.5', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 14 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth > stageWidth at scale 0.5', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 20 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 0.5;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(false);
+        });
+
+        it('plotWidth < stageWidth at scale 2', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 2 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth === stageWidth at scale 2', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 3 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(true);
+        });
+
+        it('plotWidth > stageWidth at scale 2', async () => {
+            wrapper = shallowMount(VegPlot, {
+                props: {
+                    plotConfig,
+                    plots: { ...plots, width: 4 },
+                },
+            });
+            wrapper.vm.scaleDisplay = 2;
+            await nextTick();
+            expect(wrapper.vm.fitsOnStageX).toBe(false);
+        });
+    });
 });

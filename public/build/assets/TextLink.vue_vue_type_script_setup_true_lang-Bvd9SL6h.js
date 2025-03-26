@@ -1,0 +1,1 @@
+import{d as r,c as n,o,u as t,P as s,w as p,p as a}from"./app-BcwI-xJi.js";const c=r({__name:"TextLink",props:{href:{}},setup(u){return(e,f)=>(o(),n(t(s),{class:"rounded-md px-2 py-1 text-sm text-purple-800 outline-none hover:text-purple-900 hover:underline focus:ring-2 focus:ring-green-500",href:e.href},{default:p(()=>[a(e.$slots,"default")]),_:3},8,["href"]))}});export{c as _};
