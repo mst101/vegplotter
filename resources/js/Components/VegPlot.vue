@@ -2,7 +2,7 @@
 import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
 import type Konva from 'konva';
 import SidePanel from '@/Components/SidePanel.vue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     plots: Plot;
@@ -429,62 +429,6 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
     const newScrollLeft = scrollRatio * maxScrollLeft;
 
     gridX.value = -newScrollLeft;
-}
-
-onMounted(() => {
-    setTimeout(() => {
-        simulateDragFrames();
-    }, 1000);
-});
-
-function simulateDrag() {
-    if (!grid.value || !stage.value)
-        return;
-
-    const startX = gridX.value;
-    const endX = minX.value;
-    const duration = 2000;
-    const steps = 50; // Number of steps in the animation
-    const stepSize = (endX - startX) / steps;
-    let currentStep = 0;
-
-    const interval = duration / steps; // Interval between steps in milliseconds
-
-    const animationInterval = setInterval(() => {
-        if (currentStep >= steps) {
-            clearInterval(animationInterval);
-            return;
-        }
-
-        gridX.value += stepSize;
-        currentStep++;
-    }, interval);
-}
-
-function simulateDragFrames() {
-    if (!grid.value || !stage.value)
-        return;
-
-    const startX = gridX.value;
-    const endX = minX.value; // Drag to the extreme left
-
-    const duration = 2000; // 2 seconds
-    const startTime = performance.now();
-
-    function animate(currentTime: number) {
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1); // Ensure progress doesn't exceed 1
-
-        // Linear interpolation for smooth dragging
-        const newX = startX + (endX - startX) * progress;
-        gridX.value = newX;
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
-    }
-
-    requestAnimationFrame(animate);
 }
 </script>
 
