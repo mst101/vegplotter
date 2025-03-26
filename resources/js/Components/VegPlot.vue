@@ -257,6 +257,10 @@ function zoom(e: Konva.KonvaEventObject<TouchEvent | WheelEvent>, zoomFactor?: n
         direction = (zoomFactor! > 1 ? 1 : -1);
     }
 
+    if (direction < 0 && fitsOnStageX.value && fitsOnStageY.value) {
+        return;
+    }
+
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
         : Math.min(scales.length - 1, currentScaleIndex + 1);
