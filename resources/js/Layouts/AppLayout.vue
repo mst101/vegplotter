@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const showingNavigationDropdown = ref(false);
 
@@ -71,7 +71,7 @@ function logout() {
                                     My Jobs
                                 </NavLink>
 
-                                <NavLink :href="route('restaurant')" :active="route().current('restaurant')">
+                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Plants
                                 </NavLink>
 
@@ -236,7 +236,7 @@ function logout() {
                         My Jobs
                     </ResponsiveNavLink>
 
-                    <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
+                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         Plants
                     </ResponsiveNavLink>
 
@@ -245,7 +245,7 @@ function logout() {
                         More
                     </div>
 
-                    <ResponsiveNavLink :href="route('restaurant')" :active="route().current('restaurant')">
+                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         About
                     </ResponsiveNavLink>
 

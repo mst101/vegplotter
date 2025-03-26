@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import type { Nullable } from '@/types';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import type { Nullable } from '@/types';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import TextLink from '@/Components/TextLink.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { Head, useForm } from '@inertiajs/vue3';
 
 defineOptions({
     layout: AppLayout,

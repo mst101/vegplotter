@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
 import type { Nullable } from '@/types';
+import { onMounted, ref } from 'vue';
 
 defineProps<{
     modelValue: string;

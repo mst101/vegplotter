@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import type { Nullable } from '@/types';
 import ActionMessage from '@/Components/ActionMessage.vue';
 import FormSection from '@/Components/FormSection.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import type { Nullable } from '@/types';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const passwordInput = ref<Nullable<HTMLInputElement>>(null);
 const currentPasswordInput = ref<Nullable<HTMLInputElement>>(null);

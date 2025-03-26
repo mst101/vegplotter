@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
+import { Link } from '@inertiajs/vue3';
 
 defineOptions({
     layout: AppLayout,
@@ -180,8 +180,9 @@ function handleImageError() {
                         </div>
                     </section>
 
+                    <!-- class="delaybgload mt-8 py-6" -->
                     <section
-                        class="delaybgload mt-8 py-6"
+                        class="mt-8 py-6"
                         data-style="background-image: url('/images/slider6.jpg'); background-size: cover;"
                         style="background-image: url('/images/slider6.jpg'); background-size: cover;"
                     >

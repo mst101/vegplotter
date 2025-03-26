@@ -681,7 +681,7 @@ function getDistance(touches: TouchList) {
                     </v-layer>
                 </v-stage>
             </div>
-            <div class="w-full">
+            <div class="w-full sm:hidden">
                 <SidePanel />
             </div>
         </div>

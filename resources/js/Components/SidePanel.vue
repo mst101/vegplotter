@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import MenuBed from '@/Components/MenuBed.vue';
+import MenuPlant from '@/Components/MenuPlant.vue';
 import MenuSettings from '@/Components/MenuSettings.vue';
 import MenuStructure from '@/Components/MenuStructure.vue';
-import MenuPlant from '@/Components/MenuPlant.vue';
+import { ref } from 'vue';
 
 const currentPanel = ref('MenuSettings');
 </script>

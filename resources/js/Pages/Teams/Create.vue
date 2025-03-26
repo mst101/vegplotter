@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import CreateTeamForm from '@/Pages/Teams/Partials/CreateTeamForm.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
+import CreateTeamForm from '@/Pages/Teams/Partials/CreateTeamForm.vue';
 
 defineOptions({
     layout: AppLayout,

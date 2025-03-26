@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import type { JetstreamTeamPermissions, Nullable, Role, Team, TeamInvitation, UserMembership } from '@/types';
 import ActionMessage from '@/Components/ActionMessage.vue';
 import ActionSection from '@/Components/ActionSection.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -13,7 +12,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SectionBorder from '@/Components/SectionBorder.vue';
 import TextInput from '@/Components/TextInput.vue';
-import type { JetstreamTeamPermissions, Nullable, Role, Team, TeamInvitation, UserMembership } from '@/types';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps<{
     team: Team & {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ApiTokenManager from '@/Pages/API/Partials/ApiTokenManager.vue';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import type { ApiToken } from '@/types';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import ApiTokenManager from '@/Pages/API/Partials/ApiTokenManager.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
 
 defineOptions({

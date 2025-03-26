@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import SvgMastodon from '@/Icons/SvgMastodon.vue';
-import SvgYouTube from '@/Icons/SvgYouTube.vue';
-import SvgInstagram from '@/Icons/SvgInstagram.vue';
-import SvgFacebook from '@/Icons/SvgFacebook.vue';
-import SvgTwitter from '@/Icons/SvgTwitter.vue';
 import TextLink from '@/Components/TextLink.vue';
+import SvgFacebook from '@/Icons/SvgFacebook.vue';
+import SvgInstagram from '@/Icons/SvgInstagram.vue';
+import SvgMastodon from '@/Icons/SvgMastodon.vue';
+import SvgTwitter from '@/Icons/SvgTwitter.vue';
+import SvgYouTube from '@/Icons/SvgYouTube.vue';
+import { Head } from '@inertiajs/vue3';
 
 export interface Props {
     title: string;

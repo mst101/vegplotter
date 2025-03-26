@@ -1,6 +1,6 @@
-import { ref } from 'vue';
 import type { Change, Model } from '@/types';
 import { useKonva } from '@/Composables/useKonva';
+import { ref } from 'vue';
 
 export function useUndoStack(model: Model) {
     const { isObject } = useKonva();
@@ -29,6 +29,7 @@ export function useUndoStack(model: Model) {
 
     function applyRedo() {
         if (idx.value >= max.value) {
+            // eslint-disable-next-line no-console
             console.log('No more REDOs available');
             return;
         }
@@ -53,6 +54,7 @@ export function useUndoStack(model: Model) {
 
     function applyUndo() {
         if (idx.value <= -1) {
+            // eslint-disable-next-line no-console
             console.log('No more UNDOs available');
             return;
         }

@@ -1,9 +1,11 @@
 export function useKonva() {
     function getUUID() {
         try {
-            return self.crypto.randomUUID();
+            return globalThis.crypto.randomUUID();
         }
-        catch (err) {
+        catch (err: any) {
+            // eslint-disable-next-line no-console
+            console.log(err);
             return pseudoGuid();
         }
     }

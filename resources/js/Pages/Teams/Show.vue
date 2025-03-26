@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import AppLayout from '@/Layouts/AppLayout.vue';
-import DeleteTeamForm from '@/Pages/Teams/Partials/DeleteTeamForm.vue';
+import type { JetstreamTeamPermissions, Role, Team, TeamInvitation, User, UserMembership } from '@/types';
 import SectionBorder from '@/Components/SectionBorder.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageContainer from '@/Pages/PageContainer.vue';
+import DeleteTeamForm from '@/Pages/Teams/Partials/DeleteTeamForm.vue';
 import TeamMemberManager from '@/Pages/Teams/Partials/TeamMemberManager.vue';
 import UpdateTeamNameForm from '@/Pages/Teams/Partials/UpdateTeamNameForm.vue';
-import type { JetstreamTeamPermissions, Role, Team, TeamInvitation, User, UserMembership } from '@/types';
-import PageContainer from '@/Pages/PageContainer.vue';
 
 defineOptions({
     layout: AppLayout,

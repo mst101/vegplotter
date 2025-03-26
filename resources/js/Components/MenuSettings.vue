@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { Plot } from '@/types';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
 import { inject } from 'vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import type { Plot } from '@/types';
 
 const initialPlots = inject<Plot>('plots');
 const form = useForm({
