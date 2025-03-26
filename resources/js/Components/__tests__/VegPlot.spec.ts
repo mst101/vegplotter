@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { Plot, PlotConfig } from '@/types';
 
 import { shallowMount } from '@vue/test-utils';
-import VueKonva from 'vue-konva';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { nextTick } from 'vue';
+import VueKonva from 'vue-konva';
 import VegPlot from '../VegPlot.vue';
-import type { Plot, PlotConfig } from '@/types';
 
 describe('vegPlot', () => {
     let wrapper: any;
@@ -26,7 +26,7 @@ describe('vegPlot', () => {
         UNIT_PIXELS: 100,
         SIDEPANEL_WIDTH: 224,
         VERTICAL_OFFSET: 118,
-        PADDING_PIXELS: 50,
+        PADDING_PIXELS: 100,
     };
 
     const myStage = {
@@ -70,7 +70,7 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 7.8, length: 6.3 },
+                    plots: { ...plots, width: 7, length: 5.5 },
                 },
             });
             wrapper.vm.scaleDisplay = 1;
@@ -117,14 +117,14 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 7.8, length: 6.3 },
+                    plots: { ...plots, width: 7, length: 5.5 },
                 },
             });
             wrapper.vm.scaleDisplay = 1;
             await nextTick();
 
-            expect(wrapper.vm.plotArea.x).toEqual(10);
-            expect(wrapper.vm.plotArea.y).toEqual(10);
+            expect(wrapper.vm.plotArea.x).toEqual(50);
+            expect(wrapper.vm.plotArea.y).toEqual(50);
         });
 
         it('plotArea position: is too big', async () => {
@@ -161,7 +161,7 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 15.6, length: 12.6 },
+                    plots: { ...plots, width: 15, length: 12 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
@@ -208,14 +208,14 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 15.6, length: 12.6 },
+                    plots: { ...plots, width: 15, length: 12 },
                 },
             });
             wrapper.vm.scaleDisplay = 0.5;
             await nextTick();
 
-            expect(wrapper.vm.plotArea.x).toEqual(20);
-            expect(wrapper.vm.plotArea.y).toEqual(20);
+            expect(wrapper.vm.plotArea.x).toEqual(50);
+            expect(wrapper.vm.plotArea.y).toEqual(50);
         });
 
         it('plotArea position: is too big', async () => {
@@ -252,7 +252,7 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 3.8, length: 3 },
+                    plots: { ...plots, width: 3, length: 2.1 },
                 },
             });
             wrapper.vm.scaleDisplay = 2;
@@ -299,14 +299,14 @@ describe('vegPlot', () => {
             wrapper = shallowMount(VegPlot, {
                 props: {
                     plotConfig,
-                    plots: { ...plots, width: 3.8, length: 3 },
+                    plots: { ...plots, width: 3, length: 2.1 },
                 },
             });
             wrapper.vm.scaleDisplay = 2;
             await nextTick();
 
-            expect(wrapper.vm.plotArea.x).toEqual(10);
-            expect(wrapper.vm.plotArea.y).toEqual(12.5);
+            expect(wrapper.vm.plotArea.x).toEqual(50);
+            expect(wrapper.vm.plotArea.y).toEqual(57.5);
         });
 
         it('plotArea position: is too big', async () => {

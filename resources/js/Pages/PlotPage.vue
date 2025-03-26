@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { provide } from 'vue';
+import type { Plot } from '@/types';
+import VegPlot from '@/Components/VegPlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageContainer from '@/Pages/PageContainer.vue';
-import VegPlot from '@/Components/VegPlot.vue';
-import type { Plot } from '@/types';
+import { provide } from 'vue';
 
 defineOptions({
     layout: AppLayout,
@@ -25,7 +25,7 @@ provide('plots', props.plots);
                 UNIT_PIXELS: 100,
                 SIDEPANEL_WIDTH: 224,
                 VERTICAL_OFFSET: 118,
-                PADDING_PIXELS: 50,
+                PADDING_PIXELS: 100,
             }"
         />
     </PageContainer>

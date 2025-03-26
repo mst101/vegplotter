@@ -14,7 +14,7 @@ const SCROLLBAR_SIZE = props.plotConfig?.SCROLLBAR_SIZE || 12;
 const UNIT_PIXELS = props.plotConfig?.UNIT_PIXELS || 100;
 const SIDEPANEL_WIDTH = props.plotConfig?.SIDEPANEL_WIDTH || 220;
 const VERTICAL_OFFSET = props.plotConfig?.VERTICAL_OFFSET || 116;
-const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 50;
+const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 100;
 // window.innerWidth = 1024;
 // window.innerHeight = 768;
 
@@ -37,13 +37,13 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 // Computed properties
 const fitsOnStageX = computed(() => {
-    const stageWidth = unScale(stageConfig.value.width!); // - SCROLLBAR_SIZE;
+    const stageWidth = unScale(stageConfig.value.width!) - PADDING_PIXELS;
     const plotWidth = props.plots.width * UNIT_PIXELS;
     return plotWidth <= stageWidth;
 });
 
 const fitsOnStageY = computed(() => {
-    const stageHeight = unScale(stageConfig.value.height!); // - SCROLLBAR_SIZE;
+    const stageHeight = unScale(stageConfig.value.height!) - PADDING_PIXELS;
     const plotHeight = props.plots.length * UNIT_PIXELS;
     return plotHeight <= stageHeight;
 });
@@ -490,6 +490,7 @@ function getDistance(touches: TouchList) {
             <span>padding: {{ `(${paddingX.toFixed(0)}, ${paddingY.toFixed(0)})` }}</span>
             <span>min: {{ `(${minX.toFixed(0)}, ${minY.toFixed(0)})` }}</span>
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
+            <span>gridWidth: {{ `(${plotArea.x!.toFixed(0)}, ${plotArea.y!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridX!.toFixed(0)}, ${gridY!.toFixed(0)})` }}</span>
         </p>
         <div class="flex">
@@ -534,7 +535,7 @@ function getDistance(touches: TouchList) {
                     </v-layer>
 
                     <!-- Fixed axes layer -->
-                    <v-layer ref="axesLayer" name="axes" :config="{ visible: false }">
+                    <v-layer ref="axesLayer" name="axes" :config="{ visible: true }">
                         <!-- X-axis -->
                         <v-line
                             name="x-axis"
