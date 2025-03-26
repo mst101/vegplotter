@@ -15,8 +15,8 @@ const UNIT_PIXELS = props.plotConfig?.UNIT_PIXELS || 100;
 const SIDEPANEL_WIDTH = props.plotConfig?.SIDEPANEL_WIDTH || 220;
 const VERTICAL_OFFSET = props.plotConfig?.VERTICAL_OFFSET || 116;
 const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 50;
-window.innerWidth = 1024;
-window.innerHeight = 768;
+// window.innerWidth = 1024;
+// window.innerHeight = 768;
 
 // Setup reactive state
 const updateKey = ref(0);
