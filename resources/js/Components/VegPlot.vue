@@ -125,8 +125,8 @@ const gridHeight = computed(() => {
         : totalHeight;
 });
 
-const minX = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
-const minY = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value! * scaleDisplay.value));
+const gridXMin = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
+const gridYMin = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value! * scaleDisplay.value));
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
     return {
@@ -138,8 +138,8 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
         scaleY: scaleDisplay.value,
         draggable: true,
         dragBoundFunc: (pos: { x: number; y: number }) => {
-            const newX = Math.max(minX.value, Math.min(0, pos.x));
-            const newY = Math.max(minY.value, Math.min(0, pos.y));
+            const newX = Math.max(gridXMin.value, Math.min(0, pos.x));
+            const newY = Math.max(gridYMin.value, Math.min(0, pos.y));
             return { x: newX, y: newY };
         },
     };
@@ -290,12 +290,12 @@ function scroll(e: Konva.KonvaEventObject<WheelEvent>) {
 
     if (isHorizontalScrollbarVisible.value) {
         const newX = gridX.value + scrollAmountX;
-        gridX.value = Math.max(minX.value, Math.min(0, newX));
+        gridX.value = Math.max(gridXMin.value, Math.min(0, newX));
     }
 
     if (isVerticalScrollbarVisible.value) {
         const newY = gridY.value + scrollAmountY;
-        gridY.value = Math.max(minY.value, Math.min(0, newY));
+        gridY.value = Math.max(gridYMin.value, Math.min(0, newY));
     }
 }
 
@@ -334,12 +334,12 @@ const scaledHeight = computed(() => {
 function updateGridPosition() {
     // Center if plot is smaller than stage, otherwise align left
     gridX.value = isHorizontalScrollbarVisible.value
-        ? Math.max(minX.value, 0)
+        ? Math.max(gridXMin.value, 0)
         : 0;
 
     // Center if plot is smaller than stage, otherwise align to top
     gridY.value = isVerticalScrollbarVisible.value
-        ? Math.max(minY.value, 0)
+        ? Math.max(gridYMin.value, 0)
         : 0;
 }
 
@@ -492,7 +492,7 @@ function getDistance(touches: TouchList) {
             <span>stage: {{ `(${stageConfig.width}, ${stageConfig.height})` }}</span>
             <span>fitsOnStageX: {{ `(${fitsOnStageX}, ${fitsOnStageY})` }}</span>
             <span>padding: {{ `(${paddingX.toFixed(0)}, ${paddingY.toFixed(0)})` }}</span>
-            <span>min: {{ `(${minX.toFixed(0)}, ${minY.toFixed(0)})` }}</span>
+            <span>min: {{ `(${gridXMin.toFixed(0)}, ${gridYMin.toFixed(0)})` }}</span>
             <span>gridWidth: {{ `(${gridWidth!.toFixed(0)}, ${gridHeight!.toFixed(0)})` }}</span>
             <span>gridWidth: {{ `(${plotArea.x!.toFixed(0)}, ${plotArea.y!.toFixed(0)})` }}</span>
             <span>gridConfigXY: {{ `(${gridX!.toFixed(0)}, ${gridY!.toFixed(0)})` }}</span>
