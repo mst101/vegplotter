@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type Konva from 'konva';
-import { computed, ref, watch } from 'vue';
-import SidePanel from '@/Components/SidePanel.vue';
 import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
+import type Konva from 'konva';
+import SidePanel from '@/Components/SidePanel.vue';
+import { debounce } from 'lodash-es';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     plots: Plot;
@@ -24,7 +25,7 @@ const stage = ref<VueKonvaRef<Konva.Stage> | null>(null);
 const background = ref<VueKonvaRef<Konva.Layer> | null>(null);
 const grid = ref<VueKonvaRef<Konva.Group> | null>(null);
 const axesLayer = ref<VueKonvaRef<Konva.Layer> | null>(null);
-const scaleDisplay = ref(1);
+const scaleDisplay = ref(2);
 const stageConfig = ref<Konva.StageConfig>({
     width: window.innerWidth - SIDEPANEL_WIDTH,
     height: window.innerHeight - VERTICAL_OFFSET,
@@ -248,8 +249,10 @@ function unScale(val: number) {
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
-    gridX.value = e.target.x();
-    gridY.value = e.target.y();
+    debounce(() => {
+        gridX.value = e.target.x();
+        gridY.value = e.target.y();
+    }, 500);
 }
 
 function resizeStage() {
@@ -279,9 +282,9 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
 
     const direction = e.evt.deltaY > 0 ? -1 : 1;
 
-    if (direction < 0 && fitsOnStageX.value && fitsOnStageY.value) {
-        return;
-    }
+    // if (direction < 0 && fitsOnStageX.value && fitsOnStageY.value) {
+    //     return;
+    // }
 
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
@@ -393,20 +396,15 @@ function updateGridPosition() {
 //     return lines;
 // });
 
-// Combine Horizontal Grid Lines into a Single Path
+// Combine Horizontal Grid Lines into a Single Path covering the entire grid-group
 const horizontalGridPath = computed(() => {
     let path = '';
-    const plotStartY = plotArea.value.y! * scaleDisplay.value;
-    const plotHeight = plotArea.value.height! * scaleDisplay.value;
-    const numLines = Math.ceil(plotHeight / UNIT_PIXELS) + 1;
-    const offsetY = plotStartY % UNIT_PIXELS;
-    console.log(plotStartY, plotHeight, numLines, offsetY);
+    const startY = paddingY.value % UNIT_PIXELS;
+    const numLines = Math.ceil(gridHeight.value / UNIT_PIXELS);
 
     for (let i = 0; i < numLines; i++) {
-        const y = plotStartY + i * UNIT_PIXELS - offsetY;
-        if (y >= 0 && y <= gridHeight.value) {
-            path += `M 0 ${y} L ${gridWidth.value} ${y} `;
-        }
+        const y = startY + i * UNIT_PIXELS;
+        path += `M 0 ${y} L ${gridWidth.value} ${y} \n`;
     }
 
     return {
@@ -416,26 +414,21 @@ const horizontalGridPath = computed(() => {
     };
 });
 
-// Combine Vertical Grid Lines into a Single Path
+// Combine Vertical Grid Lines into a Single Path covering the entire grid-group
 const verticalGridPath = computed(() => {
     let path = '';
-    const plotStartX = plotArea.value.x! * scaleDisplay.value;
-    const plotWidth = plotArea.value.width! * scaleDisplay.value;
-    const numLines = Math.ceil(plotWidth / UNIT_PIXELS) + 1;
-    const offsetX = plotStartX % UNIT_PIXELS;
+    const startX = paddingX.value % UNIT_PIXELS;
+    const numLines = Math.ceil(gridWidth.value / UNIT_PIXELS);
 
     for (let i = 0; i < numLines; i++) {
-        const x = plotStartX + i * UNIT_PIXELS - offsetX;
-        if (x >= 0 && x <= gridWidth.value) {
-            path += `M ${x} 0 L ${x} ${gridHeight.value} `;
-        }
+        const x = startX + i * UNIT_PIXELS;
+        path += `M ${x} 0 L ${x} ${gridHeight.value} `;
     }
 
     return {
         data: path,
         stroke: 'gray',
         strokeWidth: 0.5,
-        visible: false,
     };
 });
 
@@ -449,10 +442,6 @@ watch(
     updateGridPosition,
     { immediate: true },
 );
-
-// onMounted(() => {
-//     grid.value!.getNode().cache();
-// });
 
 // Scrollbar related
 function handleVerticalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {

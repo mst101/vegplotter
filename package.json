@@ -10,21 +10,22 @@
         "test": "vitest"
     },
     "devDependencies": {
-        "@antfu/eslint-config": "^2.27.3",
+        "@antfu/eslint-config": "^4.11.0",
         "@inertiajs/vue3": "^2.0.5",
         "@tailwindcss/forms": "^0.5.10",
         "@tailwindcss/typography": "^0.5.16",
         "@tsconfig/node22": "^22.0.1",
-        "@types/node": "^22.13.10",
-        "@vitejs/plugin-vue": "^5.2.1",
+        "@types/lodash-es": "^4.17.12",
+        "@types/node": "^22.13.13",
+        "@vitejs/plugin-vue": "^5.2.3",
         "@vue/server-renderer": "^3.5.13",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.7.0",
         "autoprefixer": "^10.4.21",
-        "axios": "^1.8.3",
+        "axios": "^1.8.4",
         "canvas": "^3.1.0",
         "concurrently": "^9.1.2",
-        "eslint": "^9.22.0",
+        "eslint": "^9.23.0",
         "eslint-plugin-tailwindcss": "^3.18.0",
         "jsdom": "^26.0.0",
         "laravel-vite-plugin": "^1.2.0",
@@ -32,7 +33,7 @@
         "postcss": "^8.5.3",
         "tailwindcss": "^3.4.17",
         "typescript": "^5.8.2",
-        "vite": "^6.2.2",
+        "vite": "^6.2.3",
         "vitest": "^3.0.9",
         "vue": "^3.5.13",
         "vue-tsc": "^2.2.8"
@@ -47,7 +48,7 @@
         ]
     },
     "dependencies": {
-        "konva": "^9.3.19",
+        "konva": "^9.3.20",
         "lodash-es": "^4.17.21",
         "uuid": "^11.1.0",
         "vue-konva": "^3.2.0"
