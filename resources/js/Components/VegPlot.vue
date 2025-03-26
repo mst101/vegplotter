@@ -4,17 +4,21 @@ import type Konva from 'konva';
 import SidePanel from '@/Components/SidePanel.vue';
 import { computed, ref, watch } from 'vue';
 
-const props = defineProps<{
+interface Props {
     plots: Plot;
     plotConfig?: PlotConfig;
-}>();
+}
 
 // Constants
-const SCROLLBAR_SIZE = props.plotConfig?.SCROLLBAR_SIZE || 12;
-const UNIT_PIXELS = props.plotConfig?.UNIT_PIXELS || 100;
-const SIDEPANEL_WIDTH = props.plotConfig?.SIDEPANEL_WIDTH || 220;
-const VERTICAL_OFFSET = props.plotConfig?.VERTICAL_OFFSET || 116;
-const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 50;
+const { plots, plotConfig } = defineProps<Props>();
+const {
+    SCROLLBAR_SIZE = 12,
+    UNIT_PIXELS = 100,
+    SIDEPANEL_WIDTH = 220,
+    VERTICAL_OFFSET = 116,
+    PADDING_PIXELS = 50,
+} = plotConfig || {};
+
 // window.innerWidth = 1024;
 // window.innerHeight = 768;
 
@@ -38,19 +42,19 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 // Computed properties
 const fitsOnStageX = computed(() => {
     const stageWidth = unScale(stageConfig.value.width!) - PADDING_PIXELS * 2;
-    const plotWidth = props.plots.width * UNIT_PIXELS;
+    const plotWidth = plots.width * UNIT_PIXELS;
     return plotWidth <= stageWidth;
 });
 
 const fitsOnStageY = computed(() => {
     const stageHeight = unScale(stageConfig.value.height!) - PADDING_PIXELS * 2;
-    const plotHeight = props.plots.length * UNIT_PIXELS;
+    const plotHeight = plots.length * UNIT_PIXELS;
     return plotHeight <= stageHeight;
 });
 
 const paddingX = computed(() => {
     const stageSize = unScale(stageConfig.value.width!);
-    const plotWidth = props.plots.width * UNIT_PIXELS;
+    const plotWidth = plots.width * UNIT_PIXELS;
 
     if (fitsOnStageX.value) {
         const padding = (stageSize - plotWidth) / 2;
@@ -71,7 +75,7 @@ const paddingX = computed(() => {
 
 const paddingY = computed(() => {
     const stageSize = unScale(stageConfig.value.height!);
-    const plotSize = props.plots.length * UNIT_PIXELS;
+    const plotSize = plots.length * UNIT_PIXELS;
 
     if (fitsOnStageY.value) {
         const padding = (stageSize - plotSize) / 2;
@@ -94,8 +98,8 @@ const plotArea = computed<Konva.GroupConfig>(() => {
     return {
         x: paddingX.value,
         y: paddingY.value,
-        width: props.plots.width * UNIT_PIXELS,
-        height: props.plots.length * UNIT_PIXELS,
+        width: plots.width * UNIT_PIXELS,
+        height: plots.length * UNIT_PIXELS,
         fill: '#eee',
         stroke: 'black',
     };
@@ -411,8 +415,8 @@ const verticalGridPathMinor = computed(() => {
 
 watch(
     [
-        () => props.plots.length,
-        () => props.plots.width,
+        () => plots.length,
+        () => plots.width,
         () => stageConfig.value.height,
         () => stageConfig.value.width,
     ],
