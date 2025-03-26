@@ -2,8 +2,7 @@
 import type { Plot, PlotConfig, Position, VueKonvaRef } from '@/types';
 import type Konva from 'konva';
 import SidePanel from '@/Components/SidePanel.vue';
-import { debounce } from 'lodash-es';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     plots: Plot;
@@ -216,43 +215,13 @@ const scales = [5, 4, 3, 2.5, 2, 1.5, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2,
 let currentScaleIndex = scales.indexOf(scaleDisplay.value);
 
 // Methods
-// function calculatePadding(stageSize: number, plotSize: number) {
-//     const padding = (stageSize - (plotSize * UNIT_PIXELS)) / 2;
-//     console.log(stageSize, plotSize, padding);
-//     return 50;
-//     if (padding < -PADDING_PIXELS)
-//         return Math.min(PADDING_PIXELS, Math.abs(padding));
-//     if (padding < 0)
-//         return Math.max(PADDING_PIXELS, Math.abs(padding));
-//     return padding;
-// }
-
-// function calculatePadding(stageSize: number, plotSize: number, defaultPadding: number) {
-//     const scaledPlotSize = plotSize * scaleDisplay.value;
-//     // console.log(stageSize, scaledPlotSize, defaultPadding);
-//
-//     if (scaledPlotSize < stageSize) {
-//         const padding = unScale((stageSize - scaledPlotSize) / 2);
-//         console.log('padding', padding);
-//
-//         if (padding < defaultPadding) {
-//             return padding;
-//         }
-//         return Math.min(defaultPadding, padding);
-//     }
-//
-//     return defaultPadding;
-// }
-
 function unScale(val: number) {
     return val / scaleDisplay.value;
 }
 
 function handleGridDragMove(e: Konva.KonvaEventObject<any>) {
-    debounce(() => {
-        gridX.value = e.target.x();
-        gridY.value = e.target.y();
-    }, 500);
+    gridX.value = e.target.x();
+    gridY.value = e.target.y();
 }
 
 function resizeStage() {
@@ -281,10 +250,6 @@ function zoom(e: Konva.KonvaEventObject<WheelEvent>) {
     };
 
     const direction = e.evt.deltaY > 0 ? -1 : 1;
-
-    // if (direction < 0 && fitsOnStageX.value && fitsOnStageY.value) {
-    //     return;
-    // }
 
     currentScaleIndex = direction > 0
         ? Math.max(0, currentScaleIndex - 1)
@@ -361,40 +326,6 @@ function updateGridPosition() {
         ? Math.max(minY.value, 0)
         : 0;
 }
-
-// // Compute horizontal grid lines visible within grid-group boundaries
-// const horizontalGridLines = computed(() => {
-//     const lines = [];
-//     const offsetY = plotArea.value.y! % UNIT_PIXELS;
-//     const groupHeight = scaledHeight.value!;
-//     const start = Math.ceil((UNIT_PIXELS - offsetY) / 10);
-//     const end = Math.floor((groupHeight + UNIT_PIXELS - offsetY) / 10);
-//
-//     for (let n = start; n <= end; n++) {
-//         const y = -UNIT_PIXELS + n * 10 + offsetY;
-//         if (y >= 0 && y <= groupHeight) {
-//             lines.push({ index: n, y, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
-//         }
-//     }
-//     return lines;
-// });
-//
-// // Compute vertical grid lines visible within grid-group boundaries
-// const verticalGridLines = computed(() => {
-//     const lines = [];
-//     const offsetX = plotArea.value.x! % UNIT_PIXELS;
-//     const groupWidth = scaledWidth.value!;
-//     const start = Math.ceil((UNIT_PIXELS - offsetX) / 10);
-//     const end = Math.floor((groupWidth + UNIT_PIXELS - offsetX) / 10);
-//
-//     for (let n = start; n <= end; n++) {
-//         const x = -UNIT_PIXELS + n * 10 + offsetX;
-//         if (x >= 0 && x <= groupWidth) {
-//             lines.push({ index: n, x, strokeWidth: n % 10 === 0 ? 1 : 0.5 });
-//         }
-//     }
-//     return lines;
-// });
 
 // Combine Horizontal Grid Lines into a Single Path covering the entire grid-group
 const horizontalGridPathMajor = computed(() => {
@@ -490,7 +421,6 @@ function handleVerticalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
 }
 
 function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
-    // debounce(horizontalScrollDrag(e), 100);
     const scrollbarX = e.target.x();
     const scrollbarTrackWidth = stageConfig.value.width! - horizontalScrollbarWidth.value;
     const scrollRatio = scrollbarX / scrollbarTrackWidth;
@@ -499,6 +429,36 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
     const newScrollLeft = scrollRatio * maxScrollLeft;
 
     gridX.value = -newScrollLeft;
+}
+
+onMounted(() => {
+    setTimeout(() => {
+        simulateDrag();
+    }, 1000);
+});
+
+function simulateDrag() {
+    if (!grid.value || !stage.value)
+        return;
+
+    const startX = gridX.value;
+    const endX = minX.value;
+    const duration = 2000;
+    const steps = 50; // Number of steps in the animation
+    const stepSize = (endX - startX) / steps;
+    let currentStep = 0;
+
+    const interval = duration / steps; // Interval between steps in milliseconds
+
+    const animationInterval = setInterval(() => {
+        if (currentStep >= steps) {
+            clearInterval(animationInterval);
+            return;
+        }
+
+        gridX.value += stepSize;
+        currentStep++;
+    }, interval);
 }
 </script>
 
@@ -543,34 +503,6 @@ function handleHorizontalScrollDragMove(e: Konva.KonvaEventObject<DragEvent>) {
                             <!-- Combined Vertical Grid Lines -->
                             <v-path :config="verticalGridPathMinor" />
                             <v-path :config="verticalGridPathMajor" />
-
-                            <!--                            &lt;!&ndash; Horizontal grid lines &ndash;&gt; -->
-                            <!--                            <v-line -->
-                            <!--                                v-for="line in horizontalGridLines" -->
-                            <!--                                :key="`h-${line.index}`" -->
-                            <!--                                name="gridLines-h" -->
-                            <!--                                :config="{ -->
-                            <!--                                    x: 0, -->
-                            <!--                                    y: line.y, -->
-                            <!--                                    points: [0, 0, scaledWidth, 0], -->
-                            <!--                                    stroke: 'gray', -->
-                            <!--                                    strokeWidth: line.strokeWidth, -->
-                            <!--                                }" -->
-                            <!--                            /> -->
-
-                            <!--                            &lt;!&ndash; Vertical grid lines &ndash;&gt; -->
-                            <!--                            <v-line -->
-                            <!--                                v-for="line in verticalGridLines" -->
-                            <!--                                :key="`v-${line.index}`" -->
-                            <!--                                name="gridLines-v" -->
-                            <!--                                :config="{ -->
-                            <!--                                    x: line.x, -->
-                            <!--                                    y: 0, -->
-                            <!--                                    points: [0, 0, 0, scaledHeight], -->
-                            <!--                                    stroke: 'gray', -->
-                            <!--                                    strokeWidth: line.strokeWidth, -->
-                            <!--                                }" -->
-                            <!--                            /> -->
                         </v-group>
                     </v-layer>
 
