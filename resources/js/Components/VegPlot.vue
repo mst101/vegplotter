@@ -114,7 +114,6 @@ const gridWidth = computed(() => {
         ? Math.max(totalWidth, unScale(stageWidth))
         : totalWidth;
 });
-
 const gridHeight = computed(() => {
     const stageHeight = stageConfig.value.height!;
     const plotHeight = plotArea.value.height!;
@@ -124,9 +123,10 @@ const gridHeight = computed(() => {
         ? Math.max(totalHeight, unScale(stageHeight))
         : totalHeight;
 });
-
-const gridXMin = computed(() => Math.min(0, stageConfig.value.width! - gridWidth.value! * scaleDisplay.value));
-const gridYMin = computed(() => Math.min(0, stageConfig.value.height! - gridHeight.value! * scaleDisplay.value));
+const scaledGridWidth = computed(() => gridWidth.value * scaleDisplay.value);
+const scaledGridHeight = computed(() => gridHeight.value * scaleDisplay.value);
+const gridXMin = computed(() => Math.min(0, stageConfig.value.width! - scaledGridWidth.value));
+const gridYMin = computed(() => Math.min(0, stageConfig.value.height! - scaledGridHeight.value));
 
 const gridConfig = computed<Konva.GroupConfig>(() => {
     return {
@@ -146,21 +146,21 @@ const gridConfig = computed<Konva.GroupConfig>(() => {
 });
 
 const isVerticalScrollbarVisible = computed(() => {
-    return Math.floor(gridHeight.value! * scaleDisplay.value) > stageConfig.value.height!;
+    return Math.floor(scaledGridHeight.value) > stageConfig.value.height!;
 });
 const verticalScrollbarHeight = computed(() => {
     if (!isVerticalScrollbarVisible.value)
         return 0;
-    return Math.max(20, (stageConfig.value.height! / (gridHeight.value! * scaleDisplay.value)) * stageConfig.value.height!);
+    return Math.max(20, (stageConfig.value.height! / scaledGridHeight.value) * stageConfig.value.height!);
 });
 
 const isHorizontalScrollbarVisible = computed(() => {
-    return Math.floor(gridWidth.value! * scaleDisplay.value) > stageConfig.value.width!;
+    return Math.floor(scaledGridWidth.value) > stageConfig.value.width!;
 });
 const horizontalScrollbarWidth = computed(() => {
     if (!isHorizontalScrollbarVisible.value)
         return 0;
-    return Math.max(20, (stageConfig.value.width! / (gridWidth.value! * scaleDisplay.value)) * stageConfig.value.width!);
+    return Math.max(20, (stageConfig.value.width! / scaledGridWidth.value) * stageConfig.value.width!);
 });
 
 const verticalScrollbarY = computed(() => {
@@ -168,7 +168,7 @@ const verticalScrollbarY = computed(() => {
         return 0;
 
     const scrollTop = -gridY.value;
-    const maxScrollTop = gridHeight.value! * scaleDisplay.value - stageConfig.value.height!;
+    const maxScrollTop = scaledGridHeight.value - stageConfig.value.height!;
     const scrollbarY = (scrollTop / maxScrollTop) * (stageConfig.value.height! - verticalScrollbarHeight.value);
     return Math.max(0, Math.min(stageConfig.value.height! - verticalScrollbarHeight.value, scrollbarY));
 });
@@ -178,7 +178,7 @@ const horizontalScrollbarX = computed(() => {
         return 0;
 
     const scrollLeft = -gridX.value;
-    const maxScrollLeft = gridWidth.value! * scaleDisplay.value - stageConfig.value.width!;
+    const maxScrollLeft = scaledGridWidth.value - stageConfig.value.width!;
     const scrollbarX = (scrollLeft / maxScrollLeft) * (stageConfig.value.width! - horizontalScrollbarWidth.value);
     return Math.max(0, Math.min(stageConfig.value.width! - horizontalScrollbarWidth.value, scrollbarX));
 });
