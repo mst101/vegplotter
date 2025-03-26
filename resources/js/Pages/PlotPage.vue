@@ -25,7 +25,7 @@ provide('plots', props.plots);
                 UNIT_PIXELS: 100,
                 SIDEPANEL_WIDTH: 224,
                 VERTICAL_OFFSET: 118,
-                PADDING_PIXELS: 100,
+                PADDING_PIXELS: 50,
             }"
         />
     </PageContainer>

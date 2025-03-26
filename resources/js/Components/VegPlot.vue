@@ -14,7 +14,7 @@ const SCROLLBAR_SIZE = props.plotConfig?.SCROLLBAR_SIZE || 12;
 const UNIT_PIXELS = props.plotConfig?.UNIT_PIXELS || 100;
 const SIDEPANEL_WIDTH = props.plotConfig?.SIDEPANEL_WIDTH || 220;
 const VERTICAL_OFFSET = props.plotConfig?.VERTICAL_OFFSET || 116;
-const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 100;
+const PADDING_PIXELS = props.plotConfig?.PADDING_PIXELS || 50;
 // window.innerWidth = 1024;
 // window.innerHeight = 768;
 
@@ -37,13 +37,13 @@ const horizontalScrollbar = ref<VueKonvaRef<Konva.Rect> | null>(null);
 
 // Computed properties
 const fitsOnStageX = computed(() => {
-    const stageWidth = unScale(stageConfig.value.width!) - PADDING_PIXELS;
+    const stageWidth = unScale(stageConfig.value.width!) - PADDING_PIXELS * 2;
     const plotWidth = props.plots.width * UNIT_PIXELS;
     return plotWidth <= stageWidth;
 });
 
 const fitsOnStageY = computed(() => {
-    const stageHeight = unScale(stageConfig.value.height!) - PADDING_PIXELS;
+    const stageHeight = unScale(stageConfig.value.height!) - PADDING_PIXELS * 2;
     const plotHeight = props.plots.length * UNIT_PIXELS;
     return plotHeight <= stageHeight;
 });
@@ -681,7 +681,7 @@ function getDistance(touches: TouchList) {
                     </v-layer>
                 </v-stage>
             </div>
-            <div class="w-full sm:hidden">
+            <div class="w-full">
                 <SidePanel />
             </div>
         </div>
